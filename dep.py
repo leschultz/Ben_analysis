@@ -22,15 +22,7 @@ def info(item):
                     except Exception:
                         pass
 
-            # Find the dump rate if word in line
-            if 'dump' in value:
-                for i in value:
-                    try:
-                        dumprate = int(i)
-                    except Exception:
-                        pass
-
-            # Find all defined run steps and save under runsteps
+                # Find all defined run steps and save under runsteps
             if 'run' in value:
                 for i in value:
                     try:
@@ -73,7 +65,6 @@ def info(item):
         # Save paramters for each trajectory file
         parameters = {
                       'timestep': timestep,
-                      'dumprate': dumprate,
                       'hold1': hold1,
                       'hold2': hold2,
                       'hold3': hold3,

@@ -72,6 +72,7 @@ for item in os.walk('../'):
 
     df['APD'] = numerator/df['Volume']
 
-    print(numerator)
-    print(dfel)
-    print(df)
+    # Cooling data starts after hold1
+    dfcool = df[df['Step'] >= depparam['hold1']]
+
+    dfcool.to_csv(os.path.join(path, 'cooling_data.txt'))
