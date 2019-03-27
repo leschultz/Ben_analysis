@@ -6,7 +6,7 @@ energies.
 import pandas as pd
 
 
-def outdata(filepath):
+def info(filepath):
     '''
     Open a file and parse per line.
     '''

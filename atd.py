@@ -1,10 +1,10 @@
-from trajsteps import trajectorysteps
-from infoparser import inputinfo
-from outimport import outdata
-
 import pymatgen as mg
 import pandas as pd
 import numpy as np
+
+import traj
+import test
+import dep
 
 import os
 
@@ -29,32 +29,35 @@ for item in os.walk('../'):
 
     # Determine the composition based on binary name
     dirs = path.split('/')
-    print(dirs)
     elements = dirs[1].split('-')
     els = [mg.Element(i) for i in elements]
 
     atomicradii = [i.atomic_radius*10. for i in els]  # in Am
     atomicvol = [volume(i) for i in atomicradii]  # in Am^3
-    print(els)
-    print(atomicradii)
-    print(atomicvol)
     
     # Location of files
-    system = os.path.join(path, 'test.out')  # Output file
-    traj = os.path.join(path, 'traj.lammpstrj')  # Trajectories
-    dep = os.path.join(path, 'dep.in')  # Input file
+    file_system = os.path.join(path, 'test.out')  # Output file
+    file_trajs = os.path.join(path, 'traj.lammpstrj')  # Trajectories
+    file_dep = os.path.join(path, 'dep.in')  # Input file
 
     # Important paramters from the input file
-    param = inputinfo(dep)
+    depparam = dep.info(file_dep)
+
+    # Information from traj.lammpstrj file
+    dftraj = traj.info(file_trajs)
 
     # Thermodynamic data from test.out file
-    dfsys = outdata(system)
+    dfsys = test.info(file_system)
 
-    # The steps where trajectories where exported
-    trajsteps = trajectorysteps(traj)
+    # Merge dfsys and dftraj on matching steps
+    df = pd.merge(dfsys, dftraj, on=['Step'])
 
-    # Match dfsys steps with trajsteps
-    df = dfsys[dfsys['Step'].isin(trajsteps)]
+    # Find the box lengths
+    df['dx'] = df['xhi']-df['xlo']  # Am
+    df['dy'] = df['yhi']-df['ylo']  # Am
+    df['dz'] = df['zhi']-df['zlo']  # Am
 
-    print(path)
+    # Find the box volume
+    df['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
+
     print(df)
