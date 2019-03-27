@@ -56,7 +56,7 @@ for item in os.walk('../'):
     elements = {}
     for key, count in counts.items():
         element = mg.Element(depparam['elements'][key])
-        atomicradii = element.atomic_radius*10.  # in Am
+        atomicradii = element.atomic_radius  # in Am
         atomicvol = volume(atomicradii)  # in Am^3
 
         elements[depparam['elements'][key]] = {
@@ -72,4 +72,6 @@ for item in os.walk('../'):
 
     df['APD'] = numerator/df['Volume']
 
+    print(numerator)
+    print(dfel)
     print(df)
