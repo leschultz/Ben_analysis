@@ -97,5 +97,5 @@ def jobiterator(path):
 
 
 # Download data into current directory
-datapath = '/home/nerve/Documents/UW/gdrive/DMREF/MD/Rc_database/TEMP/Al-Ag/Ag1.00/5000'
+datapath = '/home/nerve/Documents/UW/gdrive/DMREF/MD/Rc_database/TEMP/Al-Ag/Ag0.01/5000'
 jobiterator(datapath)

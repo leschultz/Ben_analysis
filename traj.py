@@ -14,6 +14,7 @@ def info(name):
 
     outputs:
         df = The parsed parameters of interest
+        counts = The number of types of atoms
     '''
 
     steps = []
@@ -27,6 +28,7 @@ def info(name):
     zlo = []
     zhi = []
 
+    # Gather steps and simulation box boundaries
     with open(name) as file:
         for line in file:
             if 'TIMESTEP' in line:
@@ -57,6 +59,33 @@ def info(name):
                 zlo.append(float(z[0]))
                 zhi.append(float(z[1]))
 
+    # Gather the number of elements
+    counts = {}  # The counts for the types of atoms
+    with open(name) as file:
+        terminatecount = -1
+        startcount = 0
+        for line in file:
+
+            # Break the loop after one frame
+            if terminatecount == 1:
+                break
+
+            if (startcount == 1) & ('TIMESTEP' not in line):
+                values = line.split(' ')
+                element_type = values[1]
+
+                if counts.get(element_type) is None:
+                    counts[element_type] = 1
+
+                else:
+                    counts[element_type] += 1
+
+            if 'TIMESTEP' in line:
+                terminatecount += 1
+
+            if 'ATOMS id type' in line:
+                startcount += 1
+
     param = {
              'Step': steps,
              'xlo': xlo,
@@ -69,4 +98,4 @@ def info(name):
 
     df = pd.DataFrame(param)
 
-    return df
+    return df, counts

@@ -44,7 +44,7 @@ for item in os.walk('../'):
     depparam = dep.info(file_dep)
 
     # Information from traj.lammpstrj file
-    dftraj = traj.info(file_trajs)
+    dftraj, counts = traj.info(file_trajs)
 
     # Thermodynamic data from test.out file
     dfsys = test.info(file_system)
@@ -60,4 +60,4 @@ for item in os.walk('../'):
     # Find the box volume
     df['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
 
-    print(df)
+    print(counts)
