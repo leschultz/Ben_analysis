@@ -62,7 +62,7 @@ def copydata(item):
 
                 # Open the file containing the trajectory data
                 if 'traj.lammpstrj' in str(member):
-                    member =  archive.extractfile(member)
+                    member = archive.extractfile(member)
                     traj = member.read()
 
             # Create the path to work in
@@ -97,5 +97,5 @@ def jobiterator(path):
 
 
 # Download data into current directory
-datapath = '/home/nerve/Documents/UW/gdrive/DMREF/MD/Rc_database/TEMP/Al-Ag/Ag0.01/5000'
+datapath = '/home/nerve/Documents/UW/gdrive/DMREF/MD/Rc_database/TEMP/'
 jobiterator(datapath)

@@ -18,6 +18,12 @@ def volume(r):
     return 4./3.*np.pi*r**3.
 
 
+testdotout = 'test.out'
+trajdotlammpstrj = 'traj.lammpstrj'
+depdotin = 'dep.in'
+
+savedirname = 'analysis_data'
+
 # Loop for each path
 for item in os.walk('../'):
 
@@ -26,11 +32,13 @@ for item in os.walk('../'):
     # Filter for paths that contain jobs
     if 'job' not in path:
         continue
+    if savedirname in path:
+        continue
 
     # Location of files
-    file_system = os.path.join(path, 'test.out')  # Output file
-    file_trajs = os.path.join(path, 'traj.lammpstrj')  # Trajectories
-    file_dep = os.path.join(path, 'dep.in')  # Input file
+    file_system = os.path.join(path, testdotout)  # Output file
+    file_trajs = os.path.join(path, trajdotlammpstrj)  # Trajectories
+    file_dep = os.path.join(path, depdotin)  # Input file
 
     # Important paramters from the input file
     depparam = dep.info(file_dep)
@@ -75,4 +83,9 @@ for item in os.walk('../'):
     # Cooling data starts after hold1
     dfcool = df[df['Step'] >= depparam['hold1']]
 
-    dfcool.to_csv(os.path.join(path, 'cooling_data.txt'))
+    # Create a directory for the analysis files
+    savepath = os.path.join(path, savedirname)
+    if not os.path.exists(savepath):
+        os.makedirs(savepath)
+
+    dfcool.to_csv(os.path.join(savepath, 'apd.txt'), index=False)  # Export APD
