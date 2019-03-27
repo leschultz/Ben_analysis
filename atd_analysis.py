@@ -49,6 +49,9 @@ for item in os.walk('../'):
     # Thermodynamic data from test.out file
     dfsys = test.info(file_system)
 
+    # Calculate times
+    dfsys['time'] = dfsys['Step']*depparam['timestep']
+
     # Merge dfsys and dftraj on matching steps
     df = pd.merge(dfsys, dftraj, on=['Step'])
 
@@ -78,14 +81,16 @@ for item in os.walk('../'):
     # Calculate the atomic packing density (APD)
     numerator = np.sum(dfel['counts']*dfel['volume'])
 
-    df['APD'] = numerator/df['Volume']
-
-    # Cooling data starts after hold1
-    dfcool = df[df['Step'] >= depparam['hold1']]
+    # Create a dataframe for APD
+    dfapd = pd.DataFrame()
+    dfapd['time'] = df['time']
+    dfapd['APD'] = numerator/df['Volume']
 
     # Create a directory for the analysis files
     savepath = os.path.join(path, savedirname)
     if not os.path.exists(savepath):
         os.makedirs(savepath)
 
-    dfcool.to_csv(os.path.join(savepath, 'apd.txt'), index=False)  # Export APD
+    dfsys.to_csv(os.path.join(savepath, 'system.txt'), index=False)
+    dftraj.to_csv(os.path.join(savepath, 'boxboundary.txt'), index=False)
+    dfapd.to_csv(os.path.join(savepath, 'apd.txt'), index=False)
