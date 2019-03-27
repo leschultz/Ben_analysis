@@ -27,14 +27,6 @@ for item in os.walk('../'):
     if 'job' not in path:
         continue
 
-    # Determine the composition based on binary name
-    dirs = path.split('/')
-    elements = dirs[1].split('-')
-    els = [mg.Element(i) for i in elements]
-
-    atomicradii = [i.atomic_radius*10. for i in els]  # in Am
-    atomicvol = [volume(i) for i in atomicradii]  # in Am^3
-    
     # Location of files
     file_system = os.path.join(path, 'test.out')  # Output file
     file_trajs = os.path.join(path, 'traj.lammpstrj')  # Trajectories
@@ -60,4 +52,24 @@ for item in os.walk('../'):
     # Find the box volume
     df['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
 
-    print(counts)
+    # Element counts from actual element
+    elements = {}
+    for key, count in counts.items():
+        element = mg.Element(depparam['elements'][key])
+        atomicradii = element.atomic_radius*10.  # in Am
+        atomicvol = volume(atomicradii)  # in Am^3
+
+        elements[depparam['elements'][key]] = {
+                                               'counts': count,
+                                               'radius': atomicradii,
+                                               'volume': atomicvol,
+                                               }
+
+    dfel = pd.DataFrame(elements).T
+
+    # Calculate the atomic packing density (APD)
+    numerator = np.sum(dfel['counts']*dfel['volume'])
+
+    df['APD'] = numerator/df['Volume']
+
+    print(df)

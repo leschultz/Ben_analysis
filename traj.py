@@ -72,7 +72,7 @@ def info(name):
 
             if (startcount == 1) & ('TIMESTEP' not in line):
                 values = line.split(' ')
-                element_type = values[1]
+                element_type = int(values[1])
 
                 if counts.get(element_type) is None:
                     counts[element_type] = 1

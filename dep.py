@@ -54,6 +54,16 @@ def info(item):
                 deltatemp = float(tfi[1])
                 tempstart -= deltatemp
 
+            # Determine the elements in the system
+            if 'pair_coeff' in value:
+                types = [i for i in value if i != ''][4:]
+
+                elements = {}
+                i = 1
+                for element in types:
+                    elements[i] = element
+                    i += 1
+
         increment = sum(runsteps[-2:])  # The steps to the start of hold
 
         hold1 = sum(runsteps[:-2])  # The steps until temperature steps
@@ -71,6 +81,7 @@ def info(item):
                       'tempstart': tempstart,
                       'deltatemp': deltatemp,
                       'increment': increment,
+                      'elements': elements,
                       }
 
     return parameters
