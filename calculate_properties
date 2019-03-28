@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd single
+python3 runiterator.py

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd average_tg
 python3 tgdf.py
 python3 tgmergecrystall.py
 python3 meantg.py
