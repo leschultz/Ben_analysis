@@ -1,7 +1,9 @@
 from job import job
 import os
 
-savedirname = 'analysis_data'
+datadirname = 'analysis_data'
+plotdirname = 'analysis_plots'
+
 
 # Loop for each path
 for item in os.walk('../'):
@@ -11,7 +13,9 @@ for item in os.walk('../'):
     # Filter for paths that contain jobs
     if 'job' not in path:
         continue
-    if savedirname in path:
+    if datadirname in path:
+        continue
+    if plotdirname in path:
         continue
 
     run = job(path)

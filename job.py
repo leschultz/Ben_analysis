@@ -1,3 +1,5 @@
+from matplotlib import pyplot as pl
+
 from kneefinder import *
 
 import pymatgen as mg
@@ -142,7 +144,7 @@ class job:
 
         return self.dfapd
 
-    def etg(self):
+    def etg(self, plot=True):
         '''
         Calculate the glass transition temperature based on E-3kt.
         '''
@@ -180,9 +182,27 @@ class job:
 
         self.dfetg = df
 
+        if plot:
+            plotpath = os.path.join(self.path, 'analysis_plots')
+
+            # Create the path to work in
+            if not os.path.exists(plotpath):
+                os.makedirs(plotpath)
+
+            plotknee(
+                     dfcool['Temp'],
+                     dfcool['E-3kT'],
+                     tfit,
+                     efit,
+                     ddefit,
+                     kneeindex,
+                     plotpath,
+                     'etg'
+                     )
+
         return self.tgfrome, self.dfetg
 
-    def vtg(self):
+    def vtg(self, plot=True):
         '''
         Calculate the glass transition temperature based on specific volume.
         '''
@@ -221,6 +241,24 @@ class job:
         self.tgfromv = tfit[kneeindex]
 
         self.dfvtg = df
+
+        if plot:
+            plotpath = os.path.join(self.path, 'analysis_plots')
+
+            # Create the path to work in
+            if not os.path.exists(plotpath):
+                os.makedirs(plotpath)
+
+            plotknee(
+                     dfcool['Temp'],
+                     dfcool['v'],
+                     tfit,
+                     vfit,
+                     ddvfit,
+                     kneeindex,
+                     plotpath,
+                     'vtg'
+                     )
 
         return self.tgfromv, self.dfvtg
 

@@ -6,6 +6,7 @@ from scipy.signal import argrelextrema
 import numpy as np
 
 import math
+import os
 
 
 def knees(x, y):
@@ -58,7 +59,7 @@ def knees(x, y):
     return xnew, yspline, ddyspline, splineindex
 
 
-def plotknee(xdata, ydata, xfit, yfit, ddyfit, kneeindex, name):
+def plotknee(xdata, ydata, xfit, yfit, ddyfit, kneeindex, path, name):
     '''
     Plot data to visualize where the knee of a curve occurs.
 
@@ -69,11 +70,23 @@ def plotknee(xdata, ydata, xfit, yfit, ddyfit, kneeindex, name):
         yfit = The y-axis data for the spline fit
         ddyfit = The y-axis data for the second derivative of yfit
         kneeindex = The index of the data of the knee
+        path = The path to save the plot
         name = The beginning save name for the plots
 
     outputs:
         saves plots in directory where it is run
     '''
+
+    xlabel = 'Temperature in [K]'
+
+    if name == 'etg':
+        ylabel = 'E-3kT [eV/atom]'
+
+    if name == 'vtg':
+        ylabel = 'Specific Volume [A^3/atom]'
+
+    xlabel = 'Temperature in [K]'
+    ddylabel = 'Second Derivative'
 
     legenddigits = 6  # The display digit length for plots legends
 
@@ -94,8 +107,8 @@ def plotknee(xdata, ydata, xfit, yfit, ddyfit, kneeindex, name):
                   label='Knee at '+str(splineintersection)
                   )
     ax[0].axhline(y=yfit[kneeindex], color='k')
-    ax[0].set_ylabel('y data')
-    ax[0].set_xlabel('x data')
+    ax[0].set_ylabel(ylabel)
+    ax[0].set_xlabel(xlabel)
     ax[0].legend()
     ax[0].grid()
 
@@ -111,12 +124,13 @@ def plotknee(xdata, ydata, xfit, yfit, ddyfit, kneeindex, name):
                   label='Knee at '+str(splineintersectionerr)
                   )
     ax[1].axhline(y=ddyfit[kneeindex], color='k')
-    ax[1].set_ylabel('Second derivative')
-    ax[1].set_xlabel('x data')
+    ax[1].set_ylabel(ddylabel)
+    ax[1].set_xlabel(xlabel)
     ax[1].legend()
     ax[1].grid()
 
+    savename = os.path.join(path, name)
     fig.tight_layout()
-    fig.savefig(name+'_second_derivative_method')
+    fig.savefig(savename)
 
     pl.close('all')
