@@ -30,6 +30,8 @@ class job:
         # The location of the job
         self.path = path
 
+        print('Analysis for: '+path)
+
         # The name of important files for each job
         trajdotlammpstrj = 'traj.lammpstrj'
         testdotout = 'test.out'
@@ -89,6 +91,8 @@ class job:
         Calculate the volume from box dimensions.
         '''
 
+        print('Calculating volume')
+
         df = pd.DataFrame()
 
         # Find the box lengths
@@ -109,6 +113,8 @@ class job:
         Calculate the atomic packing density.
         '''
 
+        print('Calculating APD')
+
         try:
             self.dfvol
         except Exception:
@@ -127,35 +133,40 @@ class job:
 
         return self.dfapd
 
-    def save_data(self, savelist):
+    def save_data(self, system=True, box=True, apd=True):
         '''
         Save all data as csv.
+
+        inputs:
+            system = True for saving dataframe
+            box = True for saving dataframe
+            apd = True for saving dataframe
         '''
+
+        print('Saving data')
 
         # Create a directory for the analysis files
         savepath = os.path.join(self.path, self.datadirname)
         if not os.path.exists(savepath):
             os.makedirs(savepath)
 
-        for item in savelist:
+        # Save system data
+        if system:
+            self.dfsys.to_csv(
+                              os.path.join(savepath, 'system.txt'),
+                              index=False
+                              )
 
-            # Save system data
-            if item == 'system':
-                self.dfsys.to_csv(
-                                  os.path.join(savepath, 'system.txt'),
-                                  index=False
-                                  )
+        # Save information of simulation box
+        if box:
+            self.dftraj.to_csv(
+                               os.path.join(savepath, 'boxboundary.txt'),
+                               index=False
+                               )
 
-            # Save information of simulation box
-            if item == 'box':
-                self.dftraj.to_csv(
-                                   os.path.join(savepath, 'boxboundary.txt'),
-                                   index=False
-                                   )
-
-            # Save APD data
-            if item == 'apd':
-                self.dfapd.to_csv(
-                                  os.path.join(savepath, 'apd.txt'),
-                                  index=False
-                                  )
+        # Save APD data
+        if apd:
+            self.dfapd.to_csv(
+                              os.path.join(savepath, 'apd.txt'),
+                              index=False
+                              )

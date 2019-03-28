@@ -14,8 +14,9 @@ for item in os.walk('../'):
     if savedirname in path:
         continue
 
-    print(path)
-
     run = job(path)
+
     run.apd()
-    run.save_data(['system', 'box', 'apd'])
+    run.save_data()
+
+    print('-'*79)
