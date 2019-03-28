@@ -1,5 +1,8 @@
+from kneefinder import *
+
 import pymatgen as mg
 import pandas as pd
+import scipy as sc
 import numpy as np
 
 import traj
@@ -8,13 +11,13 @@ import dep
 
 import os
 
+
 def volume_sphere(r):
     '''
-    Calculate the atomic volume from a radius. This assumes that the
-    volume is spherical.
+    Calculate of a sphere given a radius.
     '''
 
-    return 4./3.*np.pi*r**3.
+    return 4./3.*sc.pi*r**3.
 
 
 class job:
@@ -61,7 +64,6 @@ class job:
         self.hold3 = depparams['hold3']
         self.increment = depparams['increment']
         self.iterations = depparams['iterations']
-        self.tempstart = depparams['tempstart']
         self.deltatemp = depparams['deltatemp']
         self.elements = depparams['elements']
 
@@ -70,8 +72,11 @@ class job:
         self.dftraj['time'] = self.dftraj['Step']*self.timestep
 
         # Element counts from actual element
+        self.natoms = 0  # Count the total number of atoms
         elements = {}
         for key, count in counts.items():
+            self.natoms += count
+
             element = mg.Element(self.elements[key])
             atomicradii = element.atomic_radius  # in Am
             atomicvol = volume_sphere(atomicradii)  # in Am^3
@@ -86,12 +91,15 @@ class job:
 
         self.dfelprops = dfelprops  # The properties of elements
 
+        self.calculations = ['system', 'box']  # The calculations done
+
     def volume(self):
         '''
         Calculate the volume from box dimensions.
         '''
 
         print('Calculating volume')
+        self.calculations.append('volume')
 
         df = pd.DataFrame()
 
@@ -114,13 +122,14 @@ class job:
         '''
 
         print('Calculating APD')
+        self.calculations.append('apd')
 
         try:
             self.dfvol
         except Exception:
             job.volume(self)
 
-        # Merge dfsys and dftraj on matching steps
+        # Merge dfsys and dfvol on matching steps
         df = pd.merge(self.dfsys, self.dfvol, on=['time'])
 
         # Calculate the atomic packing density (APD)
@@ -133,14 +142,91 @@ class job:
 
         return self.dfapd
 
-    def save_data(self, system=True, box=True, apd=True):
+    def etg(self):
+        '''
+        Calculate the glass transition temperature based on E-3kt.
+        '''
+
+        print('Calculating Tg from E-3kT')
+        self.calculations.append('etg')
+
+        try:
+            self.dfvol
+        except Exception:
+            job.volume(self)
+
+        k = sc.constants.physical_constants['Boltzmann constant in eV/K']
+
+        df = pd.DataFrame()
+
+        e = self.dfsys['TotEng']-3.*k[0]*self.dfsys['Temp']
+        e /= self.natoms  # E-3kT per atom
+
+        df['Temp'] = self.dfsys['Temp']
+        df['E-3kT'] = e
+
+        # Use data at and after start of cooling
+        condition  = self.dfsys['Step'] >= self.hold1
+        dfcool = df[condition]
+        dfcool = dfcool.sort_values(by=['Temp'])  # Needed for spline
+
+        # Find the polynomial coefficients for a fit
+        tfit, efit, ddefit, kneeindex = knees(
+                                              dfcool['Temp'].values,
+                                              dfcool['E-3kT'].values
+                                              )
+
+        tg = tfit[kneeindex]
+
+        self.dfetg = df
+
+        return tg, self.dfetg
+
+    def vtg(self):
+        '''
+        Calculate the glass transition temperature based on specific volume.
+        '''
+
+        print('Calculating Tg from specific volume')
+        self.calculations.append('vtg')
+
+        try:
+            self.dfvol
+        except Exception:
+            job.volume(self)
+
+        k = sc.constants.physical_constants['Boltzmann constant in eV/K']
+
+        df = pd.DataFrame()
+
+        v = self.dfvol['Volume']/self.natoms
+
+        # Merge dfsys and dfvol on matching steps to get temp
+        dfmerge = pd.merge(self.dfsys, self.dfvol, on=['time'])
+
+        df['Temp'] = dfmerge['Temp']
+        df['v'] = v
+
+        # Use data at and after start of cooling
+        condition  = dfmerge['Step'] >= self.hold1
+        dfcool = df[condition]
+        dfcool = dfcool.sort_values(by=['Temp'])  # Needed for spline
+
+        # Find the polynomial coefficients for a fit
+        tfit, vfit, ddvfit, kneeindex = knees(
+                                              dfcool['Temp'].values,
+                                              dfcool['v'].values
+                                              )
+
+        tg = tfit[kneeindex]
+
+        self.dfvtg = df
+
+        return tg, self.dfvtg
+
+    def save_data(self):
         '''
         Save all data as csv.
-
-        inputs:
-            system = True for saving dataframe
-            box = True for saving dataframe
-            apd = True for saving dataframe
         '''
 
         print('Saving data')
@@ -151,22 +237,37 @@ class job:
             os.makedirs(savepath)
 
         # Save system data
-        if system:
+        if 'system' in self.calculations:
             self.dfsys.to_csv(
                               os.path.join(savepath, 'system.txt'),
                               index=False
                               )
 
         # Save information of simulation box
-        if box:
+        if 'box' in self.calculations:
             self.dftraj.to_csv(
                                os.path.join(savepath, 'boxboundary.txt'),
                                index=False
                                )
 
         # Save APD data
-        if apd:
+        if 'apd' in self.calculations:
             self.dfapd.to_csv(
                               os.path.join(savepath, 'apd.txt'),
                               index=False
                               )
+
+        # Save Tg data from E-3kT
+        if 'etg' in self.calculations:
+            self.dfetg.to_csv(
+                              os.path.join(savepath, 'etg.txt'),
+                              index=False
+                              )
+
+        # Save Tg data from specific volume
+        if 'vtg' in self.calculations:
+            self.dfetg.to_csv(
+                              os.path.join(savepath, 'vtg.txt'),
+                              index=False
+                              )
+

@@ -42,9 +42,7 @@ def info(item):
             if 'tfi' in value:
                 tfi = value[-1]
                 tfi = tfi.split('-${i}*')
-                tempstart = float(tfi[0])
                 deltatemp = float(tfi[1])
-                tempstart -= deltatemp
 
             # Determine the elements in the system
             if 'pair_coeff' in value:
@@ -70,7 +68,6 @@ def info(item):
                       'hold3': hold3,
                       'increment': increment,
                       'iterations': iterations,
-                      'tempstart': tempstart,
                       'deltatemp': deltatemp,
                       'elements': elements,
                       }

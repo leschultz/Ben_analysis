@@ -17,6 +17,8 @@ for item in os.walk('../'):
     run = job(path)
 
     run.apd()
+    run.etg()
+    run.vtg()
     run.save_data()
 
     print('-'*79)
