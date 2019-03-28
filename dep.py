@@ -68,10 +68,10 @@ def info(item):
                       'hold1': hold1,
                       'hold2': hold2,
                       'hold3': hold3,
+                      'increment': increment,
                       'iterations': iterations,
                       'tempstart': tempstart,
                       'deltatemp': deltatemp,
-                      'increment': increment,
                       'elements': elements,
                       }
 
