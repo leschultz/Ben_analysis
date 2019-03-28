@@ -152,5 +152,5 @@ df = df.sort_values(
 df = df.reset_index(drop=True)  # Reset the index
 
 df['Steps [-]'] = df['Steps [-]'].apply(pd.to_numeric)
-df.to_html('../../analysis_data/Tg.html')
+df.to_html('../../analysis_data/Tg.html', index=False)
 df.to_csv('../../analysis_data/Tg.txt', index=False)

@@ -33,5 +33,5 @@ mergecolumns = [
 
 dfmerge = pd.merge(dftg, df, on=mergecolumns)
 
-dfmerge.to_html('../../'+datadirname+'/tg_and_crystallization.html')
-dfmerge.to_csv('../../'+datadirname+'/tg_and_crystallization.txt')
+dfmerge.to_html('../../'+datadirname+'/tg_and_crystallization.html', index=False)
+dfmerge.to_csv('../../'+datadirname+'/tg_and_crystallization.txt', index=False)

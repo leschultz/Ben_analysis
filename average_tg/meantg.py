@@ -101,5 +101,5 @@ for vtg in dfvolumegroup:
 
 dfavg = pd.merge(dfenergyavg, dfvolumeavg)
 
-dfavg.to_html('../../'+datadirname+'/tg_mean.html')
-dfavg.to_csv('../../'+datadirname+'/tg_mean.txt')
+dfavg.to_html('../../'+datadirname+'/tg_mean.html', index=False)
+dfavg.to_csv('../../'+datadirname+'/tg_mean.txt', index=False)
