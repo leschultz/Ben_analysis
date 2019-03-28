@@ -4,6 +4,39 @@ import tarfile
 import os
 
 
+# The name of important files for each job
+trajdotlammpstrj = 'traj.lammpstrj'
+testdotout = 'test.out'
+depdotin = 'dep.in'
+compressed = 'outputs.tar.gz'
+
+
+def filecopy(copyname, filelist, copypath, savepath):
+    '''
+    Copy the file if it exists in path.
+
+    inputs:
+        copyname = The name of the file of interest
+        filelist = The list of files available
+        copypath = The path from where the file is copied from
+        savepath = The path to save the file
+
+    outputs:
+        A copied file in a directory
+    '''
+
+    # Grab the output if the file exists
+    if (copyname in filelist):
+        exist = copyname
+        filename = os.path.join(copypath, copyname)
+
+        # Create the path to work in
+        if not os.path.exists(savepath):
+            os.makedirs(savepath)
+
+        copy(filename, savepath)
+
+
 def copydata(item):
     '''
     Copy the data for Tg analysis.
@@ -28,26 +61,12 @@ def copydata(item):
         # Print status
         print('Copying data: '+name)
 
-        savepath = os.path.join(*['./', name])
-
-        condition = ('dep.in' in item[-1])
-
-        # Grab the output if the file exists
-        if ('test.out' in item[-1]) & condition:
-            filename = os.path.join(*[item[0], 'test.out'])
-            inputfile = os.path.join(*[item[0], 'dep.in'])
-
-            # Create the path to work in
-            if not os.path.exists(name):
-                os.makedirs(name)
-
-            copy(inputfile, savepath)
-            copy(filename, savepath)
+        savepath = os.path.join(*['../', name])
 
         # Grab the output archive file that contains run system data
-        elif ('outputs.tar.gz' in item[-1]) & condition:
-            filename = os.path.join(*[item[0], 'outputs.tar.gz'])
-            inputfile = os.path.join(*[item[0], 'dep.in'])
+        if (compressed in item[-1]) & (depdotin in item[-1]):
+            filename = os.path.join(*[item[0], compressed])
+            inputfile = os.path.join(*[item[0], depdotin])
 
             # Open the archive
             archive = tarfile.open(filename, 'r')
@@ -56,23 +75,33 @@ def copydata(item):
             for member in archive.getmembers():
 
                 # Open the file containing system data
-                if 'test.out' in str(member):
+                if testdotout in str(member):
                     member = archive.extractfile(member)
                     content = member.read()
 
                 # Open the file containing the trajectory data
-                if 'traj.lammpstrj' in str(member):
+                if trajdotlammpstrj in str(member):
                     member = archive.extractfile(member)
                     traj = member.read()
 
             # Create the path to work in
-            if not os.path.exists(name):
-                os.makedirs('../'+name)
+            if not os.path.exists(savepath):
+                os.makedirs(savepath)
 
             # Save the information up one directory
-            copy(inputfile, '../'+savepath)
-            open('../'+savepath+'/test.out', 'wb').write(content)
-            open('../'+savepath+'/traj.lammpstrj', 'wb').write(traj)
+            copy(inputfile, savepath)
+            open(os.path.join(savepath, testdotout), 'wb').write(content)
+            open(os.path.join(savepath, trajdotlammpstrj), 'wb').write(traj)
+
+        # Grab the files if they exist
+        else:
+
+            if testdotout in item[-1]:
+                filecopy(testdotout, item[-1], item[0], savepath)
+            if depdotin in item[-1]:
+                filecopy(depdotin, item[-1], item[0], savepath)
+            if trajdotlammpstrj in item[-1]:
+                filecopy(trajdotlammpstrj, item[-1], item[0], savepath)
 
         print('-'*79)
 
@@ -97,5 +126,5 @@ def jobiterator(path):
 
 
 # Download data into current directory
-datapath = '/home/nerve/Documents/UW/gdrive/DMREF/MD/Rc_database/TEMP/'
+datapath = '/home/nerve/Documents/UW/gdrive/DMREF/md/Rc_database/TEMP/'
 jobiterator(datapath)
