@@ -6,7 +6,7 @@ plotdirname = 'analysis_plots'
 
 
 # Loop for each path
-for item in os.walk('../'):
+for item in os.walk('../../'):
 
     path = item[0]
 

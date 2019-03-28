@@ -1,0 +1,5 @@
+#!/bin/bash
+
+python3 tgdf.py
+python3 tgmergecrystall.py
+python3 meantg.py
