@@ -25,14 +25,14 @@ def knees(x, y):
     '''
 
     # Setup the number of knots for the spline fit
-    t = [np.mean(i) for i in np.array_split(x, 4)]
+    t = np.linspace(x[1], x[-2], 10)
 
     # Fit a spline and find the derivatives
     s = spline(
                x=x,
                y=y,
                k=5,
-               t=t
+               t=t,
                )
 
     dds = s.derivative(2)  # Take a second derivative
@@ -42,8 +42,8 @@ def knees(x, y):
     yspline = s(xnew)
     ddyspline = dds(xnew)
 
-    # Truncate the end data because of strange behavior at high temperatures
-    cut = math.ceil(n*0.4)
+    # The interval for analysis has to be cut because of spline end behavior
+    cut = math.floor(n*0.5)
 
     # Find the local maxima
     localmaxes = argrelextrema(ddyspline[:cut], np.greater)
@@ -117,7 +117,10 @@ def plotknee(xdata, ydata, xfit, yfit, ddyfit, kneeindex, path, name):
                              float(str(ddyfit[kneeindex])[:legenddigits])
                              )
 
-    ax[1].plot(xfit, ddyfit)
+    # Odd end behavior with spline so cut ends from display
+    cutstart = 1
+    cutstop = -10
+    ax[1].plot(xfit[cutstart:cutstop], ddyfit[cutstart:cutstop])
     ax[1].axvline(
                   x=xfit[kneeindex],
                   color='k',
