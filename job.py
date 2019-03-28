@@ -166,7 +166,7 @@ class job:
         df['E-3kT'] = e
 
         # Use data at and after start of cooling
-        condition  = self.dfsys['Step'] >= self.hold1
+        condition = self.dfsys['Step'] >= self.hold1
         dfcool = df[condition]
         dfcool = dfcool.sort_values(by=['Temp'])  # Needed for spline
 
@@ -176,11 +176,11 @@ class job:
                                               dfcool['E-3kT'].values
                                               )
 
-        tg = tfit[kneeindex]
+        self.tgfrome = tfit[kneeindex]
 
         self.dfetg = df
 
-        return tg, self.dfetg
+        return self.tgfrome, self.dfetg
 
     def vtg(self):
         '''
@@ -208,7 +208,7 @@ class job:
         df['v'] = v
 
         # Use data at and after start of cooling
-        condition  = dfmerge['Step'] >= self.hold1
+        condition = dfmerge['Step'] >= self.hold1
         dfcool = df[condition]
         dfcool = dfcool.sort_values(by=['Temp'])  # Needed for spline
 
@@ -218,11 +218,11 @@ class job:
                                               dfcool['v'].values
                                               )
 
-        tg = tfit[kneeindex]
+        self.tgfromv = tfit[kneeindex]
 
         self.dfvtg = df
 
-        return tg, self.dfvtg
+        return self.tgfromv, self.dfvtg
 
     def save_data(self):
         '''
@@ -264,6 +264,10 @@ class job:
                               index=False
                               )
 
+            # Export the glass transition temperature
+            with open(os.path.join(savepath, 'tg_e.txt'), 'w+') as outfile:
+                outfile.write(str(self.tgfrome))
+
         # Save Tg data from specific volume
         if 'vtg' in self.calculations:
             self.dfetg.to_csv(
@@ -271,3 +275,6 @@ class job:
                               index=False
                               )
 
+            # Export the glass transition temperature
+            with open(os.path.join(savepath, 'tg_v.txt'), 'w+') as outfile:
+                outfile.write(str(self.tgfromv))
