@@ -35,6 +35,9 @@ class job:
         # The location of the job
         self.path = path
 
+        # Save path for plots
+        self.plotpath = os.path.join(self.path, 'analysis_plots')
+
         print('Analysis for: '+path)
 
         # The name of important files for each job
@@ -118,7 +121,7 @@ class job:
 
         return self.dfvol
 
-    def apd(self):
+    def apd(self, plot=True):
         '''
         Calculate the atomic packing density.
         '''
@@ -139,8 +142,29 @@ class job:
 
         # Create a dataframe for APD
         self.dfapd = pd.DataFrame()
-        self.dfapd['time'] = self.dfvol['time']
-        self.dfapd['APD'] = numerator/self.dfvol['Volume']
+        self.dfapd['Temp'] = df['Temp']
+        self.dfapd['APD'] = numerator/df['Volume_x']
+
+        if plot:
+
+            # Plot only the cooling data
+            fig, ax = pl.subplots()
+
+            ax.plot(
+                    self.dfapd['Temp'][df['Step'] >= self.hold1],
+                    self.dfapd['APD'][df['Step'] >= self.hold1],
+                    marker='.',
+                    linestyle='none'
+                    )
+
+            ax.set_xlabel('Temperature [K]')
+            ax.set_ylabel('ATD [-]')
+            ax.grid()
+
+            fig.tight_layout()
+            fig.savefig(os.path.join(self.plotpath, 'atp'))
+
+            pl.close('all')
 
         return self.dfapd
 
@@ -183,11 +207,10 @@ class job:
         self.dfetg = df
 
         if plot:
-            plotpath = os.path.join(self.path, 'analysis_plots')
 
             # Create the path to work in
-            if not os.path.exists(plotpath):
-                os.makedirs(plotpath)
+            if not os.path.exists(self.plotpath):
+                os.makedirs(self.plotpath)
 
             plotknee(
                      dfcool['Temp'],
@@ -196,7 +219,7 @@ class job:
                      efit,
                      ddefit,
                      kneeindex,
-                     plotpath,
+                     self.plotpath,
                      'etg'
                      )
 
@@ -243,11 +266,10 @@ class job:
         self.dfvtg = df
 
         if plot:
-            plotpath = os.path.join(self.path, 'analysis_plots')
 
             # Create the path to work in
-            if not os.path.exists(plotpath):
-                os.makedirs(plotpath)
+            if not os.path.exists(self.plotpath):
+                os.makedirs(self.plotpath)
 
             plotknee(
                      dfcool['Temp'],
@@ -256,7 +278,7 @@ class job:
                      vfit,
                      ddvfit,
                      kneeindex,
-                     plotpath,
+                     self.plotpath,
                      'vtg'
                      )
 
