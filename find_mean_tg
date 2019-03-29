@@ -1,6 +1,4 @@
 #!/bin/bash
 
 cd average_tg
-python3 tgdf.py
-python3 tgmergecrystall.py
-python3 meantg.py
+python3 make_tg_df.py
