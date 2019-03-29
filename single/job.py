@@ -185,8 +185,7 @@ class job:
 
         df = pd.DataFrame()
 
-        e = self.dfsys['TotEng']-3.*k[0]*self.dfsys['Temp']
-        e /= self.natoms  # E-3kT per atom
+        e = self.dfsys['TotEng']/self.natoms-3.*k[0]*self.dfsys['Temp']
 
         df['Temp'] = self.dfsys['Temp']
         df['E-3kT'] = e
