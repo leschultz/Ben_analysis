@@ -18,11 +18,40 @@ for item in os.walk('../../'):
     if plotdirname in path:
         continue
 
-    run = job(path)
+    error = False
+    try:
+        run = job(path)
+    except Exception:
+        error = True
+        pass
 
-    run.apd()
-    run.etg()
-    run.vtg()
-    run.save_data()
+    try:
+        run.apd()
+    except Exception:
+        error = True
+        pass
+
+    try:
+        run.etg()
+    except Exception:
+        error = True
+        pass
+
+    try:
+        run.vtg()
+    except Exception:
+        error = True
+        pass
+
+    try:
+        run.save_data()
+    except Exception:
+        error = True
+        pass
+
+    if error:
+        errorfile = os.path.join(path, 'error.txt')
+        with open(errorfile, 'a') as f:
+            f.write('error in analysis')
 
     print('-'*79)

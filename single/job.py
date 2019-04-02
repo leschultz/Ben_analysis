@@ -147,6 +147,10 @@ class job:
 
         if plot:
 
+            # Create the path to work in
+            if not os.path.exists(self.plotpath):
+                os.makedirs(self.plotpath)
+
             # Plot only the cooling data
             fig, ax = pl.subplots()
 
