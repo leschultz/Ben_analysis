@@ -78,13 +78,14 @@ class job:
             testdotout = The name of the out file
         '''
 
-        self.calculations.append('system')
         file_system = os.path.join(self.path, testdotout)  # Output file
 
         # Thermodynamic data from test.out file
         self.dfsys = test.info(file_system)
 
         self.dfsys['time'] = self.dfsys['Step']*self.timestep
+
+        self.calculations.append('system')
 
     def box(self, trajdotlammpstrj):
         '''
@@ -95,7 +96,6 @@ class job:
             trajdotlammpstrj = The name of the input file
         '''
 
-        self.calculations.append('box')
         file_trajs = os.path.join(self.path, trajdotlammpstrj)  # Trajectories
 
         # Information from traj.lammpstrj file
@@ -123,7 +123,7 @@ class job:
 
         self.dfelprops = dfelprops  # The properties of elements
 
-        self.calculations = ['system', 'box']  # The calculations done
+        self.calculations.append('box')
 
     def volume(self):
         '''
@@ -136,7 +136,6 @@ class job:
         '''
 
         print('Calculating volume')
-        self.calculations.append('volume')
 
         try:
             self.dftraj
@@ -156,6 +155,8 @@ class job:
         self.dfvol['time'] = self.dftraj['time']
         self.dfvol['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
 
+        self.calculations.append('volume')
+
         return self.dfvol
 
     def apd(self, plot=True):
@@ -170,7 +171,6 @@ class job:
         '''
 
         print('Calculating APD')
-        self.calculations.append('apd')
 
         try:
             self.dfsys
@@ -221,6 +221,8 @@ class job:
 
             pl.close('all')
 
+        self.calculations.append('apd')
+
         return self.dfapd
 
     def etg(self, plot=True):
@@ -235,7 +237,6 @@ class job:
         '''
 
         print('Calculating Tg from E-3kT')
-        self.calculations.append('etg')
 
         try:
             self.dfsys
@@ -288,6 +289,8 @@ class job:
                      'etg'
                      )
 
+        self.calculations.append('etg')
+
         return self.tgfrome, self.dfetg
 
     def vtg(self, plot=True):
@@ -302,7 +305,6 @@ class job:
         '''
 
         print('Calculating Tg from specific volume')
-        self.calculations.append('vtg')
 
         try:
             self.dfsys
@@ -358,21 +360,23 @@ class job:
                      'vtg'
                      )
 
+        self.calculations.append('vtg')
+
         return self.tgfromv, self.dfvtg
 
-    def apd_single(self, traj_path):
+    def apd_single(self, traj_path, in_path):
         '''
         Calculate the APD for a single trajectory.
 
         inputs:
             traj_path = Path with the trajectory snapshots name
+            in_path = The path to the input file.
 
         outputs:
             self.apd_snapshot = The APD for the last trajectory snapsot
         '''
 
         print('Calculating APD from: '+traj_path)
-        self.calculations.append('apd_single')
 
         df, counts = traj.info(traj_path)
 
@@ -383,21 +387,34 @@ class job:
 
         df['volume'] = df['dx']*df['dy']*df['dz']  # Am^3
 
+        # Gather input file parameters
+        allelements = {}
+        with open(in_path) as f:
+            for line in f:
+                line = line.strip().split(' ')
+                if 'pair_coeff' in line:
+                    line = [i for i in line if i != ''][4:]
+
+                    count = 1
+                    for item in line:
+                        allelements[count] = item
+                        count += 1
+
         # Element counts from actual element
         self.natoms = 0  # Count the total number of atoms
         elements = {}
         for key, count in counts.items():
             self.natoms += count
 
-            element = mg.Element(self.elements[key])
+            element = mg.Element(allelements[key])
             atomicradii = element.atomic_radius  # in Am
             atomicvol = volume_sphere(atomicradii)  # in Am^3
 
-            elements[self.elements[key]] = {
-                                            'counts': count,
-                                            'radius': atomicradii,
-                                            'volume': atomicvol,
-                                            }
+            elements[allelements[key]] = {
+                                          'counts': count,
+                                          'radius': atomicradii,
+                                          'volume': atomicvol,
+                                          }
 
         dfelprops = pd.DataFrame(elements).T
 
@@ -407,6 +424,8 @@ class job:
         df['apd'] = d
 
         self.apd_snapshot = df['apd'].values[-1]
+
+        self.calculations.append('apd_single')
 
         return self.apd_snapshot
 

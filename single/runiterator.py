@@ -6,6 +6,10 @@ import os
 datadirname = 'analysis_data'
 plotdirname = 'analysis_plots'
 minfile = os.path.join('100K_Structure_minimization', 'finaltraj.lammpstrj')
+mininfile = os.path.join(
+                         '100K_Structure_minimization',
+                         '100k_minimize_template.in'
+                         )
 
 # The name of important files for each job
 trajdotlammpstrj = 'traj.lammpstrj'
@@ -28,8 +32,9 @@ for item in os.walk(sys.argv[1]):
         continue
 
     error = False
+    run = job(path)
+
     try:
-        run = job(path)
         run.input_file(depdotin)
         run.sys(testdotout)
         run.box(trajdotlammpstrj)
@@ -56,7 +61,10 @@ for item in os.walk(sys.argv[1]):
         pass
 
     try:
-        run.apd_single(os.path.join(path, minfile))
+        run.apd_single(
+                       os.path.join(path, minfile),
+                       os.path.join(path, mininfile)
+                       )
     except Exception:
         error = True
         pass
