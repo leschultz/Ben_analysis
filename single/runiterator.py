@@ -1,13 +1,14 @@
 from job import job
+
+import sys
 import os
 
 datadirname = 'analysis_data'
 plotdirname = 'analysis_plots'
 minfile = os.path.join('100K_Structure_minimization', 'finaltraj.lammpstrj')
 
-
 # Loop for each path
-for item in os.walk('../../'):
+for item in os.walk(sys.argv[1]):
 
     path = item[0]
 

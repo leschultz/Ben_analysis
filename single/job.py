@@ -146,7 +146,10 @@ class job:
             job.volume(self)
 
         # Merge dfsys and dfvol on matching steps
-        df = pd.merge(self.dfsys, self.dfvol, on=['time'])
+        df = pd.merge(
+                      self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
+                      self.dfvol, on=['time']
+                      )
 
         # Calculate the atomic packing density (APD)
         numerator = np.sum(self.dfelprops['counts']*self.dfelprops['volume'])
@@ -154,7 +157,7 @@ class job:
         # Create a dataframe for APD
         self.dfapd = pd.DataFrame()
         self.dfapd['Temp'] = df['Temp']
-        self.dfapd['APD'] = numerator/df['Volume_x']
+        self.dfapd['APD'] = numerator/df['Volume']
 
         if plot:
 

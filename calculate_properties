@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd single
-python3 runiterator.py
+# Accepts the directory with all of the runs as the argument
+python3 single/runiterator.py '../' 
