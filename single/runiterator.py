@@ -17,6 +17,8 @@ for item in os.walk('../../'):
         continue
     if plotdirname in path:
         continue
+    if 'minimization' in path:
+        continue
 
     error = False
     try:
