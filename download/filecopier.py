@@ -1,6 +1,7 @@
-from shutil import copy
+from shutil import copy, copytree
 
 import tarfile
+import sys
 import os
 
 
@@ -37,18 +38,19 @@ def filecopy(copyname, filelist, copypath, savepath):
         copy(filename, savepath)
 
 
-def copydata(item):
+def copydata(item, outdir):
     '''
-    Copy the data for Tg analysis.
+    Copy the data.
 
     inputs:
-        item = The path for where data may be
+        item = The output from a os.walk generator
+        outdir = The name for the export path
 
     outputs:
         A collection of data files
     '''
 
-    if 'job' in item[0]:
+    if ('job' in item[0]) & ('minimization' not in item[0]):
 
         # Were parsed data will be stored
         data = []
@@ -61,7 +63,7 @@ def copydata(item):
         # Print status
         print('Copying data: '+name)
 
-        savepath = os.path.join(*['../', name])
+        savepath = os.path.join(*[outdir, name])
 
         # Grab the output archive file that contains run system data
         if (compressed in item[-1]) & (depdotin in item[-1]):
@@ -103,15 +105,25 @@ def copydata(item):
             if trajdotlammpstrj in item[-1]:
                 filecopy(trajdotlammpstrj, item[-1], item[0], savepath)
 
-        print('-'*79)
+    if 'minimization' in item[0]:
+
+        # Create a name from the path
+        name = item[0].split('/')
+        name = name[-5:]
+        name = os.path.join(*name)
+
+        savepath = os.path.join(*[outdir, name])
+
+        copytree(item[0], savepath)
 
 
-def jobiterator(path):
+def jobiterator(path, outdir):
     '''
     Search for all possible files to copy for Tg analysis.
 
     inputs:
         path = The path with all the runs
+        outdir = The export path
 
     outputs:
         A collection of data files
@@ -122,9 +134,8 @@ def jobiterator(path):
 
     # Loop for each path
     for item in paths:
-        copydata(item)
+        copydata(item, outdir)
 
 
 # Download data into current directory
-datapath = '/home/nerve/Documents/UW/gdrive/DMREF/md/Rc_database/TEMP/'
-jobiterator(datapath)
+jobiterator(sys.argv[1], sys.argv[2])
