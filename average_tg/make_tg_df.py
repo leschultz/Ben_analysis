@@ -104,9 +104,9 @@ df.to_html('../../analysis_data/alltg.html', index=False)
 df.to_csv('../../analysis_data/alltg.txt', index=False)
 
 # Filter by data that has not crystallized
-df = df[df['Crystallization'] == False]
+df = df[df['Crystallization'] is False]
 df = df[columns]  # Remove crystallization column
-df = df.loc[: ,df.columns != 'Job']  # Remove job column
+df = df.loc[:, df.columns != 'Job']  # Remove job column
 
 dfmean = df.groupby(columns[:-3]).agg([np.average])
 dfsem = df.groupby(columns[:-3]).agg([st.sem])

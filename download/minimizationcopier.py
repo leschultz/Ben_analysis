@@ -29,6 +29,7 @@ def jobiterator(path, savedir):
         save = '../../.'+name
         copytree(item[0], save)
 
+
 # Download data into current directory
 path = '/home/nerve/Documents/UW/gdrive/DMREF/md/Rc_database/comp_0pct_2pct'
 savedir = '../../.'

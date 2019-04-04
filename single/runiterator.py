@@ -3,6 +3,7 @@ import os
 
 datadirname = 'analysis_data'
 plotdirname = 'analysis_plots'
+minfile = os.path.join('100K_Structure_minimization', 'finaltraj.lammpstrj')
 
 
 # Loop for each path
@@ -41,6 +42,12 @@ for item in os.walk('../../'):
 
     try:
         run.vtg()
+    except Exception:
+        error = True
+        pass
+
+    try:
+        run.apd_single(os.path.join(path, minfile))
     except Exception:
         error = True
         pass

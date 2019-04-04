@@ -101,6 +101,11 @@ class job:
     def volume(self):
         '''
         Calculate the volume from box dimensions.
+
+        inputs:
+            self = The object reference
+        outputs:
+            self.dfvol = The volumes for trajectory snapshots
         '''
 
         print('Calculating volume')
@@ -124,6 +129,12 @@ class job:
     def apd(self, plot=True):
         '''
         Calculate the atomic packing density.
+
+        inputs:
+            self = The object reference
+        outputs:
+            self.dfapd = The APD for trajectory snapshots
+
         '''
 
         print('Calculating APD')
@@ -175,6 +186,12 @@ class job:
     def etg(self, plot=True):
         '''
         Calculate the glass transition temperature based on E-3kt.
+
+        inputs:
+            self = The object reference
+        outputs:
+            self.tgfrome = The Tg
+            self.dfetg = The data used to determine Tg
         '''
 
         print('Calculating Tg from E-3kT')
@@ -231,6 +248,12 @@ class job:
     def vtg(self, plot=True):
         '''
         Calculate the glass transition temperature based on specific volume.
+
+        inputs:
+            self = The object reference
+        outputs:
+            self.tgfromv = The Tg
+            self.dfvtg = The data used to determine Tg
         '''
 
         print('Calculating Tg from specific volume')
@@ -287,6 +310,56 @@ class job:
 
         return self.tgfromv, self.dfvtg
 
+    def apd_single(self, traj_path):
+        '''
+        Calculate the APD for a single trajectory.
+
+        inputs:
+            traj_path = Path with the trajectory snapshots name
+
+        outputs:
+            self.apd_snapshot = The APD for the last trajectory snapsot
+        '''
+
+        print('Calculating APD from: '+traj_path)
+        self.calculations.append('apd_single')
+
+        df, counts = traj.info(traj_path)
+
+        # Find the box lengths
+        df['dx'] = df['xhi']-df['xlo']  # Am
+        df['dy'] = df['yhi']-df['ylo']  # Am
+        df['dz'] = df['zhi']-df['zlo']  # Am
+
+        df['volume'] = df['dx']*df['dy']*df['dz']  # Am^3
+
+        # Element counts from actual element
+        self.natoms = 0  # Count the total number of atoms
+        elements = {}
+        for key, count in counts.items():
+            self.natoms += count
+
+            element = mg.Element(self.elements[key])
+            atomicradii = element.atomic_radius  # in Am
+            atomicvol = volume_sphere(atomicradii)  # in Am^3
+
+            elements[self.elements[key]] = {
+                                            'counts': count,
+                                            'radius': atomicradii,
+                                            'volume': atomicvol,
+                                            }
+
+        dfelprops = pd.DataFrame(elements).T
+
+        # Calculate the atomic packing density (APD)
+        d = np.sum(dfelprops['counts']*dfelprops['volume'])
+        d /= df['volume']
+        df['apd'] = d
+
+        self.apd_snapshot = df['apd'].values[-1]
+
+        return self.apd_snapshot
+
     def save_data(self):
         '''
         Save all data as csv.
@@ -341,3 +414,9 @@ class job:
             # Export the glass transition temperature
             with open(os.path.join(savepath, 'tg_v.txt'), 'w+') as outfile:
                 outfile.write(str(self.tgfromv))
+
+        # Save APD from a specific trajectory file
+        if 'apd_single' in self.calculations:
+            name = os.path.join(savepath, 'apd_single.txt')
+            with open(name, 'w+') as outfile:
+                outfile.write(str(self.apd_snapshot))
