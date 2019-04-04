@@ -54,8 +54,17 @@ for item in os.walk('../../'):
 
     names = item[0].split('/')[-5:-1]
 
-    etg = np.loadtxt(os.path.join(item[0], etgfile))
-    vtg = np.loadtxt(os.path.join(item[0], vtgfile))
+    epath = os.path.join(item[0], etgfile)
+    if os.path.exists(epath):
+        etg = np.loadtxt(epath, dtype=float)
+    else:
+        etg = np.nan
+
+    vpath = os.path.join(item[0], vtgfile)
+    if os.path.exists(vpath):
+        vtg = np.loadtxt(vpath, dtype=float)
+    else:
+        vtg = np.nan
 
     row = names+[etg, vtg]
 
@@ -87,6 +96,10 @@ df = df.sort_values(
 
 df = df.reset_index(drop=True)
 
+# Create the path to work in
+if not os.path.exists('../../analysis_data'):
+    os.makedirs('../../analysis_data')
+
 df.to_html('../../analysis_data/alltg.html', index=False)
 df.to_csv('../../analysis_data/alltg.txt', index=False)
 
@@ -94,7 +107,13 @@ df.to_csv('../../analysis_data/alltg.txt', index=False)
 df = df[df['Crystallization'] == False]
 df = df[columns]  # Remove crystallization column
 
-dfmean = df.groupby(columns[:-3]).agg([np.average])
+groups = df.groupby(columns[:-3])
+
+for item in groups:
+    d = pd.DataFrame(item[1])
+
+    print(d)
+dfmean = df.groupby(columns[:-3]).agg([np.nanmean])
 dfsem = df.groupby(columns[:-3]).agg([st.sem])
 
 df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
