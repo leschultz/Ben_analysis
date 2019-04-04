@@ -106,14 +106,9 @@ df.to_csv('../../analysis_data/alltg.txt', index=False)
 # Filter by data that has not crystallized
 df = df[df['Crystallization'] == False]
 df = df[columns]  # Remove crystallization column
+df = df.loc[: ,df.columns != 'Job']  # Remove job column
 
-groups = df.groupby(columns[:-3])
-
-for item in groups:
-    d = pd.DataFrame(item[1])
-
-    print(d)
-dfmean = df.groupby(columns[:-3]).agg([np.nanmean])
+dfmean = df.groupby(columns[:-3]).agg([np.average])
 dfsem = df.groupby(columns[:-3]).agg([st.sem])
 
 df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
