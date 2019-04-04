@@ -104,8 +104,8 @@ workdir = join(sys.argv[1], 'analysis_data')
 if not os.path.exists(workdir):
     os.makedirs(workdir)
 
-df.to_html(join(sys.argv[1], 'analysis_data/alltg.html'), index=False)
-df.to_csv(join(sys.argv[1], 'analysis_data/alltg.txt'), index=False)
+df.to_html(join(*[sys.argv[1], datadirname, 'alltg.html']), index=False)
+df.to_csv(join(*[sys.argv[1], datadirname, 'alltg.txt']), index=False)
 
 # Filter by data that has not crystallized
 df = df[df['Crystallization'] == False]
@@ -118,5 +118,5 @@ dfsem = df.groupby(columns[:-3]).agg([st.sem])
 df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
 df = pd.DataFrame(df.to_records())
 
-df.to_html(join(sys.argv[1], 'analysis_data/meantg.html'), index=False)
-df.to_csv(join(sys.argv[1], 'analysis_data/meantg.txt'), index=False)
+df.to_html(join(*[sys.argv[1], datadirname, 'meantg.html']), index=False)
+df.to_csv(join(*[sys.argv[1], datadirname, 'meantg.txt']), index=False)
