@@ -30,6 +30,9 @@ for item in os.walk(sys.argv[1]):
     error = False
     try:
         run = job(path)
+        run.input_file(depdotin)
+        run.sys(testdotout)
+        run.box(trajdotlammpstrj)
     except Exception:
         error = True
         pass

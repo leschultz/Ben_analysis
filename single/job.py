@@ -55,7 +55,7 @@ class job:
             depdotin = The name of the input file
         '''
 
-        file_dep = os.path.join(path, depdotin)  # Input file
+        file_dep = os.path.join(self.path, depdotin)  # Input file
 
         # Important paramters from the input file
         depparams = dep.info(file_dep)
@@ -79,7 +79,7 @@ class job:
         '''
 
         self.calculations.append('system')
-        file_system = os.path.join(path, testdotout)  # Output file
+        file_system = os.path.join(self.path, testdotout)  # Output file
 
         # Thermodynamic data from test.out file
         self.dfsys = test.info(file_system)
@@ -96,7 +96,7 @@ class job:
         '''
 
         self.calculations.append('box')
-        file_trajs = os.path.join(path, trajdotlammpstrj)  # Trajectories
+        file_trajs = os.path.join(self.path, trajdotlammpstrj)  # Trajectories
 
         # Information from traj.lammpstrj file
         self.dftraj, counts = traj.info(file_trajs)
@@ -138,6 +138,11 @@ class job:
         print('Calculating volume')
         self.calculations.append('volume')
 
+        try:
+            self.dftraj
+        except Exception:
+            job.box(self)
+
         df = pd.DataFrame()
 
         # Find the box lengths
@@ -166,6 +171,11 @@ class job:
 
         print('Calculating APD')
         self.calculations.append('apd')
+
+        try:
+            self.dfsys
+        except Exception:
+            job.sys(self)
 
         try:
             self.dfvol
@@ -228,6 +238,11 @@ class job:
         self.calculations.append('etg')
 
         try:
+            self.dfsys
+        except Exception:
+            job.sys(self)
+
+        try:
             self.dfvol
         except Exception:
             job.volume(self)
@@ -288,6 +303,11 @@ class job:
 
         print('Calculating Tg from specific volume')
         self.calculations.append('vtg')
+
+        try:
+            self.dfsys
+        except Exception:
+            job.sys(self)
 
         try:
             self.dfvol
