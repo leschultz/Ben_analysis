@@ -100,7 +100,7 @@ df = df.sort_values(
 df = df.reset_index(drop=True)
 
 # Create the path to work in
-workdir = join(sys.argv[1], 'analysis_data')
+workdir = join(sys.argv[1], datadirname)
 if not os.path.exists(workdir):
     os.makedirs(workdir)
 
