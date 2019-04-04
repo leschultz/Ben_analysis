@@ -3,6 +3,7 @@ from scipy import stats as st
 import pandas as pd
 import numpy as np
 
+import sys
 import os
 
 datadirname = 'analysis_data'
@@ -11,7 +12,7 @@ externaldirname = 'data_external'
 etgfile = 'tg_e.txt'
 vtgfile = 'tg_v.txt'
 
-cxpath = ['../../', externaldirname, 'All_jobs_with_crystal_info.csv']
+cxpath = [sys.argv[1], externaldirname, 'All_jobs_with_crystal_info.csv']
 dfcx = pd.read_csv(os.path.join(*cxpath))
 
 # Modify Ben's columns for merging datasets
@@ -44,7 +45,7 @@ columns = [
 dftg = pd.DataFrame(columns=columns)
 
 count = 0
-for item in os.walk('../../'):
+for item in os.walk(sys.argv[1]):
 
     if datadirname not in item[0]:
         continue
@@ -97,14 +98,14 @@ df = df.sort_values(
 df = df.reset_index(drop=True)
 
 # Create the path to work in
-if not os.path.exists('../../analysis_data'):
-    os.makedirs('../../analysis_data')
+if not os.path.exists(sys.argv[1]+'/analysis_data'):
+    os.makedirs(sys.argv[1]+'/analysis_data')
 
-df.to_html('../../analysis_data/alltg.html', index=False)
-df.to_csv('../../analysis_data/alltg.txt', index=False)
+df.to_html(sys.argv[1]+'/analysis_data/alltg.html', index=False)
+df.to_csv(sys.argv[1]+'/analysis_data/alltg.txt', index=False)
 
 # Filter by data that has not crystallized
-df = df[df['Crystallization'] is False]
+df = df[df['Crystallization'] == False]
 df = df[columns]  # Remove crystallization column
 df = df.loc[:, df.columns != 'Job']  # Remove job column
 
@@ -114,5 +115,5 @@ dfsem = df.groupby(columns[:-3]).agg([st.sem])
 df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
 df = pd.DataFrame(df.to_records())
 
-df.to_html('../../analysis_data/meantg.html', index=False)
-df.to_csv('../../analysis_data/meantg.txt', index=False)
+df.to_html(sys.argv[1]+'/analysis_data/meantg.html', index=False)
+df.to_csv(sys.argv[1]+'/analysis_data/meantg.txt', index=False)
