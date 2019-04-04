@@ -1,5 +1,7 @@
 from scipy import stats as st
 
+from os.path import join
+
 import pandas as pd
 import numpy as np
 
@@ -13,7 +15,7 @@ etgfile = 'tg_e.txt'
 vtgfile = 'tg_v.txt'
 
 cxpath = [sys.argv[1], externaldirname, 'All_jobs_with_crystal_info.csv']
-dfcx = pd.read_csv(os.path.join(*cxpath))
+dfcx = pd.read_csv(join(*cxpath))
 
 # Modify Ben's columns for merging datasets
 alloys = dfcx['alloy']
@@ -55,13 +57,13 @@ for item in os.walk(sys.argv[1]):
 
     names = item[0].split('/')[-5:-1]
 
-    epath = os.path.join(item[0], etgfile)
+    epath = join(item[0], etgfile)
     if os.path.exists(epath):
         etg = np.loadtxt(epath, dtype=float)
     else:
         etg = np.nan
 
-    vpath = os.path.join(item[0], vtgfile)
+    vpath = join(item[0], vtgfile)
     if os.path.exists(vpath):
         vtg = np.loadtxt(vpath, dtype=float)
     else:
@@ -98,11 +100,12 @@ df = df.sort_values(
 df = df.reset_index(drop=True)
 
 # Create the path to work in
-if not os.path.exists(sys.argv[1]+'/analysis_data'):
-    os.makedirs(sys.argv[1]+'/analysis_data')
+workdir = join(sys.argv[1], 'analysis_data')
+if not os.path.exists(workdir):
+    os.makedirs(workdir)
 
-df.to_html(sys.argv[1]+'/analysis_data/alltg.html', index=False)
-df.to_csv(sys.argv[1]+'/analysis_data/alltg.txt', index=False)
+df.to_html(join(sys.argv[1], 'analysis_data/alltg.html'), index=False)
+df.to_csv(join(sys.argv[1], 'analysis_data/alltg.txt'), index=False)
 
 # Filter by data that has not crystallized
 df = df[df['Crystallization'] == False]
@@ -115,5 +118,5 @@ dfsem = df.groupby(columns[:-3]).agg([st.sem])
 df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
 df = pd.DataFrame(df.to_records())
 
-df.to_html(sys.argv[1]+'/analysis_data/meantg.html', index=False)
-df.to_csv(sys.argv[1]+'/analysis_data/meantg.txt', index=False)
+df.to_html(join(sys.argv[1], 'analysis_data/meantg.html'), index=False)
+df.to_csv(join(sys.argv[1], 'analysis_data/meantg.txt'), index=False)
