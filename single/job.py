@@ -38,30 +38,27 @@ class job:
         # Save path for plots
         self.plotpath = os.path.join(self.path, 'analysis_plots')
 
-        print('Analysis for: '+path)
-
-        # The name of important files for each job
-        trajdotlammpstrj = 'traj.lammpstrj'
-        testdotout = 'test.out'
-        depdotin = 'dep.in'
-
         # The name of saving directories
         self.datadirname = 'analysis_data'
         self.plotdirname = 'analysis_plots'
 
-        # Location of files
-        file_system = os.path.join(path, testdotout)  # Output file
-        file_trajs = os.path.join(path, trajdotlammpstrj)  # Trajectories
+        self.calculations = []  # The calculations done
+
+        print('Analysis for: '+path)
+
+    def input_file(self, depdotin):
+        '''
+        Gather parameters from the input file.
+
+        inputs:
+            self = The object reference
+            depdotin = The name of the input file
+        '''
+
         file_dep = os.path.join(path, depdotin)  # Input file
 
         # Important paramters from the input file
         depparams = dep.info(file_dep)
-
-        # Information from traj.lammpstrj file
-        self.dftraj, counts = traj.info(file_trajs)
-
-        # Thermodynamic data from test.out file
-        self.dfsys = test.info(file_system)
 
         self.timestep = depparams['timestep']
         self.hold1 = depparams['hold1']
@@ -72,8 +69,38 @@ class job:
         self.deltatemp = depparams['deltatemp']
         self.elements = depparams['elements']
 
-        # Add the times for each dataframe
+    def sys(self, testdotout):
+        '''
+        Gather thermodynamic data from the out file.
+
+        inputs:
+            self = The object reference
+            testdotout = The name of the out file
+        '''
+
+        self.calculations.append('system')
+        file_system = os.path.join(path, testdotout)  # Output file
+
+        # Thermodynamic data from test.out file
+        self.dfsys = test.info(file_system)
+
         self.dfsys['time'] = self.dfsys['Step']*self.timestep
+
+    def box(self, trajdotlammpstrj):
+        '''
+        Gather trajectories from the trajectory file.
+
+        inputs:
+            self = The object reference
+            trajdotlammpstrj = The name of the input file
+        '''
+
+        self.calculations.append('box')
+        file_trajs = os.path.join(path, trajdotlammpstrj)  # Trajectories
+
+        # Information from traj.lammpstrj file
+        self.dftraj, counts = traj.info(file_trajs)
+
         self.dftraj['time'] = self.dftraj['Step']*self.timestep
 
         # Element counts from actual element
