@@ -110,7 +110,13 @@ class job:
             self.natoms += count
 
             element = mg.Element(self.elements[key])
-            atomicradii = element.atomic_radius  # in Am
+
+            try:
+                atomicradii = element.metallic_radius  # in Am
+
+            except Exception:
+                atomicradii = element.atomic_radius  # in Am
+
             atomicvol = volume_sphere(atomicradii)  # in Am^3
 
             elements[self.elements[key]] = {
@@ -407,7 +413,13 @@ class job:
             self.natoms += count
 
             element = mg.Element(allelements[key])
-            atomicradii = element.atomic_radius  # in Am
+
+            try:
+                atomicradii = element.metallic_radius  # in Am
+
+            except Exception:
+                atomicradii = element.atomic_radius  # in Am
+
             atomicvol = volume_sphere(atomicradii)  # in Am^3
 
             elements[allelements[key]] = {
