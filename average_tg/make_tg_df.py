@@ -88,14 +88,7 @@ mergecolumns = [
 df = pd.merge(dftg, dfcx, on=mergecolumns)
 
 # Alphabetically sort the dataframe
-df = df.sort_values(
-                    by=[
-                        'System',
-                        'Composition [decimal]',
-                        'Steps [-]',
-                        'Job'
-                        ]
-                    )
+df = df.sort_values(by=mergecolumns)
 
 df = df.reset_index(drop=True)
 
@@ -113,11 +106,77 @@ df = df[columns]  # Remove crystallization column
 df = df.loc[:, df.columns != 'Job']  # Remove job column
 
 group = df.groupby(columns[:-3])
-dfmean = group.agg([np.average])
-dfsem = group.agg([st.sem])
 
-df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
-df = pd.DataFrame(df.to_records())
+nsig = 2
+dfmean = []
+
+for item in group:
+    system = item[0][0]
+    comp = item[0][1]
+    step = item[0][2]
+
+    etg = item[1]['Tg from E-3kT Curve [K]']
+    en = len(etg)
+
+    emean = np.mean(etg)
+    estd = np.std(etg)
+    efiltered = etg[abs(etg-emean) < nsig*estd]
+    enremoved = en-len(efiltered)
+
+    if efiltered.size == 0:
+        enewmean = np.nan
+        enewsem = np.nan
+    else:
+        enewmean = np.mean(efiltered)
+        enewsem = st.sem(efiltered)
+
+    vtg = item[1]['Tg from Specific Volume Curve [K]']
+    vn = len(vtg)
+
+    vmean = np.mean(vtg)
+    vstd = np.std(vtg)
+    vfiltered = vtg[abs(vtg-vmean) < nsig*vstd]
+    vnremoved = vn-len(vfiltered)
+
+    if vfiltered.size == 0:
+        vnewmean = np.nan
+        vnewsem = np.nan
+    else:
+        vnewmean = np.mean(vfiltered)
+        vnewsem = st.sem(vfiltered)
+
+    row = [
+           system,
+           comp,
+           step,
+           enewmean,
+           enewsem,
+           en,
+           enremoved,
+           vnewmean,
+           vnewsem,
+           vn,
+           vnremoved,
+           ]
+
+    dfmean.append(row)
+
+meancolumns = mergecolumns[:-1]
+meancolumns += [
+                'Mean Tg from E-3kT Curve [K]',
+                'Sem Tg from E-3kT Curve [K]',
+                'Jobs from Tg from E-3kT Curve [K]',
+                'Jobs outside '+str(nsig)+' sigma from Tg from E-3kT Curve [K]'
+                ]
+
+meancolumns += [
+                'Mean Tg from Specific Volume Curve [K]',
+                'Sem Tg from Specific Volume Curve [K]',
+                'Jobs from Tg from Specific Volume Curve [K]',
+                'Jobs outside '+str(nsig)+' sigma from Tg from Specific Volume Curve [K]'
+                ]
+
+df = pd.DataFrame(dfmean, columns=meancolumns)
 
 df.to_html(join(*[sys.argv[1], datadirname, 'meantg.html']), index=False)
 df.to_csv(join(*[sys.argv[1], datadirname, 'meantg.txt']), index=False)
