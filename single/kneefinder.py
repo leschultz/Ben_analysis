@@ -24,6 +24,11 @@ def knees(x, y):
         splineindex = The index where the knee should occur
     '''
 
+    # If values are repeated, they are removed for the spline to work
+    xfilter = np.unique(x, return_index=True)[-1]
+    x = x[xfilter]
+    y = y[xfilter]
+
     # Setup the number of knots for the spline fit
     t = [np.mean(i) for i in np.array_split(x, 4)]
 
