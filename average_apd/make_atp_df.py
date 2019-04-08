@@ -80,14 +80,7 @@ mergecolumns = [
 df = pd.merge(dfapd, dfcx, on=mergecolumns)
 
 # Alphabetically sort the dataframe
-df = df.sort_values(
-                    by=[
-                        'System',
-                        'Composition [decimal]',
-                        'Steps [-]',
-                        'Job'
-                        ]
-                    )
+df = df.sort_values(by=mergecolumns)
 
 df = df.reset_index(drop=True)
 
@@ -104,11 +97,43 @@ df = df[df['Crystallization'] == False]
 df = df[columns]  # Remove crystallization column
 df = df.loc[:, df.columns != 'Job']  # Remove job column
 
-dfmean = df.groupby(columns[:-2]).agg([np.average])
-dfsem = df.groupby(columns[:-2]).agg([st.sem])
+group = df.groupby(columns[:-2])
 
-df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
-df = pd.DataFrame(df.to_records())
+nsig = 2
+dfmean = []
+
+for item in group:
+    system = item[0][0]
+    comp = item[0][1]
+    step = item[0][2]
+    apd = item[1]['apd']
+    n = len(apd)
+
+    mean = np.mean(apd)
+    std = np.std(apd)
+    filtered = apd[abs(apd-mean) < nsig*std]
+    nremoved = n-len(filtered)
+
+    if filtered.size == 0:
+        newmean = np.nan
+        newsem = np.nan
+    else:
+        newmean = np.mean(filtered)
+        newsem = st.sem(filtered)
+
+    row = [system, comp, step, newmean, newsem, n, nremoved]
+
+    dfmean.append(row)
+
+meancolumns = mergecolumns[:-1]
+meancolumns += [
+                'mean atp',
+                'sem atp',
+                'jobs',
+                'jobs outside '+str(nsig)+' sigma'
+                ]
+
+df = pd.DataFrame(dfmean, columns=meancolumns)
 
 df.to_html(join(*[sys.argv[1], datadirname, 'meanapd.html']), index=False)
 df.to_csv(join(*[sys.argv[1], datadirname, 'meanapd.txt']), index=False)

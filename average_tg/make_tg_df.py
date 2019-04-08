@@ -112,8 +112,9 @@ df = df[df['Crystallization'] == False]
 df = df[columns]  # Remove crystallization column
 df = df.loc[:, df.columns != 'Job']  # Remove job column
 
-dfmean = df.groupby(columns[:-3]).agg([np.average])
-dfsem = df.groupby(columns[:-3]).agg([st.sem])
+group = df.groupby(columns[:-3])
+dfmean = group.agg([np.average])
+dfsem = group.agg([st.sem])
 
 df = pd.merge(dfmean, dfsem, how='inner', on=mergecolumns[:-1])
 df = pd.DataFrame(df.to_records())
