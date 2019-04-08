@@ -9,31 +9,14 @@ import sys
 import os
 
 datadirname = 'analysis_data'
-externaldirname = 'data_external'
+externaldirname = 'cryxdata'
 
 apdfile = 'apd_single.txt'
 
-cxpath = [sys.argv[1], externaldirname, 'All_jobs_with_crystal_info.csv']
+cxpath = [externaldirname, 'crystalinfo.txt']
 dfcx = pd.read_csv(join(*cxpath))
 
-# Modify Ben's columns for merging datasets
-alloys = dfcx['alloy']
-elements = [i.split('-')[1] for i in alloys]
-comp = dfcx['Comp']
-comp = ['{:.2f}'.format(np.round(i, 2)) for i in comp]
-comp = [i+j for i, j in zip(elements, comp)]
-dfcx['Comp'] = comp
-
-dfcx = dfcx[['alloy', 'Comp', 'Thold', 'Job', 'Run Crystallized']]
-dfcx.columns = [
-                'System',
-                'Composition [decimal]',
-                'Steps [-]',
-                'Job',
-                'Crystallization'
-                ]
-
-# Build a dataframe for all collected Tg values
+# Build a dataframe for all collected APD values
 columns = [
            'System',
            'Composition [decimal]',
