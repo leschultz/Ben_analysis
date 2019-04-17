@@ -63,6 +63,7 @@ def info(item):
         # Save paramters for each trajectory file
         parameters = {
                       'timestep': timestep,
+                      'runsteps': runsteps,
                       'hold1': hold1,
                       'hold2': hold2,
                       'hold3': hold3,

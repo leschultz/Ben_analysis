@@ -69,6 +69,8 @@ for item in os.walk(sys.argv[1]):
         error = True
         pass
 
+    run.vp()
+
     try:
         run.save_data()
     except Exception:

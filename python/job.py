@@ -1,11 +1,15 @@
+from PyQt5 import QtGui  # Added to be able to import ovito
+
 from matplotlib import pyplot as pl
-
-from kneefinder import *
-
 import pymatgen as mg
 import pandas as pd
 import scipy as sc
 import numpy as np
+
+from ovito.modifiers import VoronoiAnalysisModifier
+from ovito.io import import_file
+
+from kneefinder import *
 
 import traj
 import test
@@ -56,11 +60,13 @@ class job:
         '''
 
         file_dep = os.path.join(self.path, depdotin)  # Input file
+        self.file_dep = file_dep
 
         # Important paramters from the input file
         depparams = dep.info(file_dep)
 
         self.timestep = depparams['timestep']
+        self.runsteps = depparams['runsteps']
         self.hold1 = depparams['hold1']
         self.hold2 = depparams['hold2']
         self.hold3 = depparams['hold3']
@@ -79,6 +85,7 @@ class job:
         '''
 
         file_system = os.path.join(self.path, testdotout)  # Output file
+        self.file_system = file_system
 
         # Thermodynamic data from test.out file
         self.dfsys = test.info(file_system)
@@ -97,6 +104,7 @@ class job:
         '''
 
         file_trajs = os.path.join(self.path, trajdotlammpstrj)  # Trajectories
+        self.file_trajs = file_trajs
 
         # Information from traj.lammpstrj file
         self.dftraj, counts = traj.info(file_trajs)
@@ -440,6 +448,107 @@ class job:
         self.calculations.append('apd_single')
 
         return self.apd_snapshot
+
+    def vp(
+           self,
+           edge_count=6,
+           threshold=0.1,
+           savedata=True,
+           saveplot=True
+           ):
+        '''
+        Do the cluster analysis for n_5 >= 10 Voronoi polyhedra (VP).
+
+        inputs:
+            self = The object reference
+            edge_count = The number of VP indexes considered
+            threshold = The maximum length for a VP edge
+            savedata = Whether or not to save the fractions and temperatures
+            saveplot = Whether or not to plot the fractions and temperatures
+        '''
+
+        try:
+            self.dftraj
+        except Exception:
+            print('Need to compute simulation box properties.')
+
+        try:
+            self.file_dep
+        except Exception:
+            print('Need to parse input file.')
+
+        try:
+            self.dfsys
+        except Exception:
+            job.sys(self)
+
+        # The number of frames where temperatures where recorded
+        frames = list(range(self.dftraj.shape[0]))
+        self.dftraj['frames'] = frames
+
+        # Merge dfsys and dftraj on matching steps
+        df = pd.merge(
+                      self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
+                      self.dftraj, on=['Step']
+                      )
+
+        interval = (sum(self.runsteps[:3]), sum(self.runsteps[:4]))
+        condition = (df['Step'] >= interval[0]) & (df['Step'] <= interval[1])
+
+        df = self.dftraj[condition]
+
+        # Load input data and create an ObjectNode with a data pipeline.
+        node = import_file(self.file_trajs, multiple_frames=True)
+
+        voro = VoronoiAnalysisModifier(
+                                       compute_indices=True,
+                                       use_radii=False,
+                                       edge_count=edge_count,
+                                       edge_threshold=threshold
+                                       )
+
+        node.modifiers.append(voro)
+
+        for frame in df['frames']:
+            out = node.compute(frame)
+            indexes = out.particle_properties['Voronoi Index'].array
+            indexes = pd.DataFrame(indexes)
+            print(indexes)
+
+        # Create a directory for the analysis files
+        savepath = os.path.join(self.path, self.datadirname)
+        if not os.path.exists(savepath):
+            os.makedirs(savepath)
+
+        if savedata:
+            df.to_csv(
+                      os.path.join(savepath, 'fracs.txt'),
+                      index=False
+                      )
+
+        if saveplot:
+            # Create the path to work in
+            if not os.path.exists(self.plotpath):
+                os.makedirs(self.plotpath)
+
+            # Plot only the cooling data
+            fig, ax = pl.subplots()
+
+            ax.plot(
+                    df['time_x'],
+                    df['time_x'],
+                    marker='.',
+                    linestyle='none'
+                    )
+
+            ax.set_ylabel('Fraction [-]')
+            ax.grid()
+            ax.legend()
+
+            fig.tight_layout()
+            fig.savefig(os.path.join(self.plotpath, 'fracs'))
+
+            pl.close('all')
 
     def save_data(self):
         '''
