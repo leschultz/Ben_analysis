@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Usage: python3 average_tg/make_tg_df.py $DIRECTORY_WITH_RUNS
-python3 average_tg/make_tg_df.py "../"
+python3 python/make_tg_df.py "../"
