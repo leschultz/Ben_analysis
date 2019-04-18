@@ -545,7 +545,7 @@ class job:
         dfv['Step'] = df['Step']
         dfv['time'] = df['time']
         dfv['variety'] = variety
-        dfv['variance'] = variance
+        dfv['max variance'] = variance
 
         # Create a directory for the analysis files
         savepath = os.path.join(self.path, self.datadirname)
@@ -568,12 +568,12 @@ class job:
 
             ax.plot(
                     dfv['time'],
-                    dfv['variance'],
+                    dfv['max variance'],
                     marker='.',
                     linestyle='none'
                     )
 
-            ax.set_ylabel('Variance of VP [-]')
+            ax.set_ylabel('Maximum Variance of VP [-]')
             ax.set_xlabel('Time [ps]')
             ax.grid()
             ax.legend()

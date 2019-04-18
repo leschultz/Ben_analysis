@@ -69,7 +69,11 @@ for item in os.walk(sys.argv[1]):
         error = True
         pass
 
-    run.vp()
+    try:
+        run.vp()
+    except Exception:
+        error = True
+        pass
 
     try:
         run.save_data()
