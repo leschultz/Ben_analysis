@@ -538,24 +538,8 @@ class job:
                 variances.append(np.var(top))
 
             variances = np.array(variances)
-
-            # Choose the variance by the smallest local minima
-            minima_index = argrelextrema(variances, np.less)
-            minima = variances[minima_index]
-            if len(minima) == 0:
-                minima = variances.max()
-            else:
-                minima = minima.min()
-
-            '''
-            index = np.where(variances == minima.min())
-            pl.plot(variances)
-            pl.plot(index, minima.min(), marker='.')
-            pl.show()
-            '''
-
             variety.append(len(dfvp)/len(indexes))
-            variance.append(minima)
+            variance.append(variances.max())
 
         dfv = pd.DataFrame()
         dfv['Step'] = df['Step']
