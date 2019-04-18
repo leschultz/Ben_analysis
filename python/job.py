@@ -1,6 +1,7 @@
 from PyQt5 import QtGui  # Added to be able to import ovito
 
 from matplotlib import pyplot as pl
+from scipy.signal import argrelextrema
 import pymatgen as mg
 import pandas as pd
 import scipy as sc
@@ -110,6 +111,10 @@ class job:
         self.dftraj, counts = traj.info(file_trajs)
 
         self.dftraj['time'] = self.dftraj['Step']*self.timestep
+
+        # The number of frames where temperatures where recorded
+        frames = list(range(self.dftraj.shape[0]))
+        self.dftraj['frame'] = frames
 
         # Element counts from actual element
         self.natoms = 0  # Count the total number of atoms
@@ -467,6 +472,8 @@ class job:
             saveplot = Whether or not to plot the fractions and temperatures
         '''
 
+        print('Calculating VP variety and variance at highest temperature hold')
+
         try:
             self.dftraj
         except Exception:
@@ -482,20 +489,16 @@ class job:
         except Exception:
             job.sys(self)
 
-        # The number of frames where temperatures where recorded
-        frames = list(range(self.dftraj.shape[0]))
-        self.dftraj['frames'] = frames
-
         # Merge dfsys and dftraj on matching steps
         df = pd.merge(
                       self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
-                      self.dftraj, on=['Step']
+                      self.dftraj, on=['Step', 'time']
                       )
 
         interval = (sum(self.runsteps[:3]), sum(self.runsteps[:4]))
         condition = (df['Step'] >= interval[0]) & (df['Step'] <= interval[1])
-
-        df = self.dftraj[condition]
+        df = df[condition]
+        df = df.reset_index(drop=True)
 
         # Load input data and create an ObjectNode with a data pipeline.
         node = import_file(self.file_trajs, multiple_frames=True)
@@ -509,11 +512,56 @@ class job:
 
         node.modifiers.append(voro)
 
-        for frame in df['frames']:
+        variety = []
+        variance = []
+        for frame in df['frame']:
             out = node.compute(frame)
             indexes = out.particle_properties['Voronoi Index'].array
-            indexes = pd.DataFrame(indexes)
-            print(indexes)
+            coords, counts = np.unique(indexes, axis=0, return_counts=True)
+
+            dfvp = pd.DataFrame()
+            dfvp['VP'] = [tuple(i) for i in coords]
+            dfvp['Step'] = int(df['Step'][df['frame'] == frame])
+            dfvp['frame'] = int(df['frame'][df['frame'] == frame])
+            dfvp['time'] = float(df['time'][df['frame'] == frame])
+            dfvp['counts'] = counts
+            dfvp['fracs'] = counts/len(indexes)
+            dfvp['time'] = float(df['time'][df['frame'] == frame])
+
+            dfvp = dfvp.sort_values(by=['fracs'], ascending=False)
+
+            variances = []
+            for i in range(1, len(counts)+1):
+                top = dfvp['fracs'].values
+                top = top[:i]
+
+                variances.append(np.var(top))
+
+            variances = np.array(variances)
+
+            # Choose the variance by the smallest local minima
+            minima_index = argrelextrema(variances, np.less)
+            minima = variances[minima_index]
+            if len(minima) == 0:
+                minima = variances.max()
+            else:
+                minima = minima.min()
+
+            '''
+            index = np.where(variances == minima.min())
+            pl.plot(variances)
+            pl.plot(index, minima.min(), marker='.')
+            pl.show()
+            '''
+
+            variety.append(len(dfvp)/len(indexes))
+            variance.append(minima)
+
+        dfv = pd.DataFrame()
+        dfv['Step'] = df['Step']
+        dfv['time'] = df['time']
+        dfv['variety'] = variety
+        dfv['variance'] = variance
 
         # Create a directory for the analysis files
         savepath = os.path.join(self.path, self.datadirname)
@@ -521,32 +569,53 @@ class job:
             os.makedirs(savepath)
 
         if savedata:
-            df.to_csv(
-                      os.path.join(savepath, 'fracs.txt'),
-                      index=False
-                      )
+            dfv.to_csv(
+                       os.path.join(savepath, 'fracs.txt'),
+                       index=False
+                       )
 
         if saveplot:
             # Create the path to work in
             if not os.path.exists(self.plotpath):
                 os.makedirs(self.plotpath)
 
-            # Plot only the cooling data
+            # Plot variance
             fig, ax = pl.subplots()
 
             ax.plot(
-                    df['time_x'],
-                    df['time_x'],
+                    dfv['time'],
+                    dfv['variance'],
                     marker='.',
                     linestyle='none'
                     )
 
-            ax.set_ylabel('Fraction [-]')
+            ax.set_ylabel('Variance of VP [-]')
+            ax.set_xlabel('Time [ps]')
             ax.grid()
             ax.legend()
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'fracs'))
+            fig.savefig(os.path.join(self.plotpath, 'fracs_variance'))
+
+            pl.close('all')
+
+            # Plot variety
+            fig, ax = pl.subplots()
+
+            ax.plot(
+                    dfv['time'],
+                    dfv['variety'],
+                    marker='.',
+                    linestyle='none'
+                    )
+
+            ax.set_ylabel('Variety of VP [-]')
+            ax.set_xlabel('Time [ps]')
+            ax.grid()
+            ax.legend()
+
+            fig.tight_layout()
+            fig.savefig(os.path.join(self.plotpath, 'fracs_variety'))
 
             pl.close('all')
 
