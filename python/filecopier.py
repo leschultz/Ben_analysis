@@ -70,6 +70,7 @@ def iterator(path, outdir, compressed, folders, files, depth):
                 print('Creating: '+name)
                 copyfile(join(item[0], f), name)
 
+
 # The name of important files for each job
 compressed = [
               'inputs.tar.gz',

@@ -456,7 +456,6 @@ class job:
 
     def vp(
            self,
-           edge_count=6,
            threshold=0.1,
            savedata=True,
            saveplot=True
@@ -472,7 +471,9 @@ class job:
             saveplot = Whether or not to plot the fractions and temperatures
         '''
 
-        print('Calculating VP variety and variance at highest temperature hold')
+        print(
+              'Calculating VP variety and variance at highest temperature hold'
+              )
 
         try:
             self.dftraj
@@ -506,7 +507,6 @@ class job:
         voro = VoronoiAnalysisModifier(
                                        compute_indices=True,
                                        use_radii=False,
-                                       edge_count=edge_count,
                                        edge_threshold=threshold
                                        )
 

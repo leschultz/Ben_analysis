@@ -34,52 +34,20 @@ for item in os.walk(sys.argv[1]):
     error = False
     run = job(path)
 
-    try:
-        run.input_file(depdotin)
-        run.sys(testdotout)
-        run.box(trajdotlammpstrj)
-    except Exception:
-        error = True
-        pass
+    run.input_file(depdotin)
+    run.sys(testdotout)
+    run.box(trajdotlammpstrj)
 
-    try:
-        run.apd()
-    except Exception:
-        error = True
-        pass
+    run.apd()
+    run.etg()
+    run.vtg()
+    run.apd_single(
+                   os.path.join(path, minfile),
+                   os.path.join(path, mininfile)
+                   )
+    run.vp()
 
-    try:
-        run.etg()
-    except Exception:
-        error = True
-        pass
-
-    try:
-        run.vtg()
-    except Exception:
-        error = True
-        pass
-
-    try:
-        run.apd_single(
-                       os.path.join(path, minfile),
-                       os.path.join(path, mininfile)
-                       )
-    except Exception:
-        error = True
-        pass
-
-    try:
-        run.vp()
-    except Exception:
-        error = True
-        pass
-
-    try:
-        run.save_data()
-    except Exception:
-        error = True
-        pass
+    run.save_data()
 
     if error:
         errorfile = os.path.join(path, 'error.txt')
