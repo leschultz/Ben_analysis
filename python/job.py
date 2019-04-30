@@ -1,5 +1,7 @@
 from PyQt5 import QtGui  # Added to be able to import ovito
 
+from scipy.interpolate import UnivariateSpline as interpolate
+
 from matplotlib import pyplot as pl
 from scipy.signal import argrelextrema
 import pymatgen as mg
@@ -10,6 +12,7 @@ import numpy as np
 from ovito.modifiers import VoronoiAnalysisModifier
 from ovito.io import import_file
 
+from line_intersector import opt
 from kneefinder import *
 
 import traj
@@ -279,17 +282,34 @@ class job:
         # Use data at and after start of cooling
         condition = self.dfsys['Step'] >= self.hold1
         dfcool = df[condition]
-        dfcool = dfcool.sort_values(by=['Temp'])  # Needed for spline
+        dfcool = dfcool.sort_values(by=['Temp'])
 
-        # Find the polynomial coefficients for a fit
-        tfit, efit, ddefit, kneeindex = knees(
-                                              dfcool['Temp'].values,
-                                              dfcool['E-3kT'].values
-                                              )
+        x = dfcool['Temp'].values
+        y = dfcool['E-3kT'].values
 
-        self.tgfrome = tfit[kneeindex]
+        # Find the point where maximum slope occurs
+        k = 5
+        s = 1
+        spl = interpolate(x=x, y=y, k=k, s=s)
+        xfit = np.linspace(x[0], x[-1], 100)
+        yfit = spl(xfit)
 
-        self.dfetg = df
+        dy = np.gradient(yfit)
+
+        # Cut by maximum slope to ensure top linear reagion (could improve)
+        xlim = xfit[np.argmax(dy)]
+        condition = x <= xlim
+        xcut = x[condition]
+        ycut = y[condition]
+
+        spl = interpolate(x=x, y=y, k=k, s=s)
+        xfitcut = np.linspace(xcut[0], xcut[-1], 100)
+        yfitcut = spl(xfitcut)
+
+        tg, left, right, ldata, rdata, middle_rmse = opt(xfitcut, yfitcut)
+
+        self.tgfrome = tg
+        self.dfetg = dfcool
 
         if plot:
 
@@ -297,16 +317,49 @@ class job:
             if not os.path.exists(self.plotpath):
                 os.makedirs(self.plotpath)
 
-            plotknee(
-                     dfcool['Temp'],
-                     dfcool['E-3kT'],
-                     tfit,
-                     efit,
-                     ddefit,
-                     kneeindex,
-                     self.plotpath,
-                     'etg'
-                     )
+            fig, ax = pl.subplots(3)
+
+            ax[0].plot(x, y, marker='.', linestyle='none', color='b', label='data')
+            ax[0].plot(xfit, yfit, linestyle=':', label='Univariate Spline (k='+str(k)+', s='+str(s)+')')
+
+            ax[0].set_ylabel('E-3kT [K/atom]')
+            ax[0].grid()
+            ax[0].legend()
+
+            ax[1].plot(xfit, dy, linestyle='-', label='Spline First Derivative')
+            ax[1].axvline(xlim, linestyle='--', color='r', label='Cut Point at T='+str(xlim)+' [K]')
+
+            ax[1].set_xlabel('Temperature [K]')
+
+            ax[1].grid()
+            ax[1].legend()
+
+            ax[2].plot(xcut, ycut, marker='*', linestyle='none', color='b', label='data')
+            ax[2].plot(xfitcut, yfitcut, linestyle='-', label='Cut Univariate Spline (k='+str(k)+', s='+str(s)+')')
+                
+            ax[2].axvline(tg, linestyle='--', color='r', label='Tg = '+str(tg)+' [K]')
+            
+            ax[2].grid()
+            ax[2].legend()
+
+            fig.set_size_inches(15, 10, forward=True)
+            fig.savefig(os.path.join(self.plotpath, 'etg'))
+            pl.close('all')
+
+            fig, ax = pl.subplots()
+
+            ax.plot(ldata[:, 0], ldata[:, 1], label='left fits')
+            ax.plot(rdata[:, 0], rdata[:, 1], label='right fits')
+            ax.plot(ldata[:, 0], middle_rmse, label='left and right fits')
+
+            ax.set_xlabel('End Temperature [K]')
+            ax.set_ylabel('RMSE')
+            ax.grid()
+            ax.legend()
+
+            fig.tight_layout()
+            fig.savefig(os.path.join(self.plotpath, 'etg_msqe'))
+            pl.close('all')
 
         self.calculations.append('etg')
 
