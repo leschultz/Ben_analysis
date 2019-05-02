@@ -1,0 +1,102 @@
+#!/usr/bin/python3
+
+from matplotlib import pyplot as pl
+
+from scipy.optimize import curve_fit
+from scipy import stats
+
+import pandas as pd
+import numpy as np
+
+import sys
+import os
+
+
+def vft(a, b, t0, gamma):
+    '''
+    The Vogel-Fulcher temperature-dependence formula of the relaxation time.'
+    '''
+
+    return t0-b/(np.log(gamma*a))
+
+
+def arrhenius(a, b, gamma):
+    '''
+    The Vogel-Fulcher temperature-dependence formula of the relaxation time.
+    T0=0'
+    '''
+
+    return -b/(np.log(gamma*a))
+
+
+def mode_coupling(t0, a, gamma):
+    '''
+    Mode-coupling theory
+    '''
+
+    return t0+a*np.log(gamma)
+
+file_path = sys.argv[1]
+timestep = float(sys.argv[2])
+time_units = sys.argv[3]
+delta_temp = float(sys.argv[4])
+temp_units = sys.argv[5]
+figure_path = sys.argv[6]
+
+if not os.path.exists(figure_path):
+    os.makedirs(figure_path)
+
+df = pd.read_csv(file_path)
+
+group = df.groupby(['System', 'Composition [decimal]'])
+
+for item in group:
+
+    system = item[0][0]
+    composition = item[0][1]
+
+    x = item[1]['Steps [-]'].values
+    x = delta_temp/(timestep*x)
+    y = item[1]['Mean Tg from E-3kT Curve [K]'].values
+
+    if np.isnan(x).any():
+        continue
+
+    if np.isnan(y).any():
+        continue
+
+    # Fitting
+    points = 100
+    start = 0
+    xfit = np.linspace(start, max(x), points)
+
+    iterlim = 1000000000
+
+    # Arrhenius
+    mode_coupling_popt, mode_coupling_pcov = curve_fit(
+                                                       mode_coupling,
+                                                       x,
+                                                       y,
+                                                       maxfev=iterlim
+                                                       )
+
+    fig, ax = pl.subplots()
+
+    ax.plot(x, y, marker='.', color='b', linestyle='none', label='Tg')
+    ax.set_xlabel('Cooling Rate ['+temp_units+'/'+time_units+']')
+    ax.set_ylabel('Tg ['+temp_units+']')
+
+    ax.set_xscale('log')
+
+    ax.grid()
+    ax.legend()
+
+    fig.tight_layout()
+
+    name = os.path.join(figure_path, '_'.join(map(str, item[0]))+'_tg')
+    print('Saving: '+name)
+
+    fig.savefig(name, format='png')
+
+    pl.show()
+    pl.close('all')
