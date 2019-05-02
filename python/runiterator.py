@@ -31,21 +31,25 @@ for item in os.walk(sys.argv[1]):
     if 'minimization' in path:
         continue
 
-    run = job(path)
+    try:
+        run = job(path)
 
-    run.input_file(depdotin)
-    run.sys(testdotout)
-    run.box(trajdotlammpstrj)
+        run.input_file(depdotin)
+        run.sys(testdotout)
+        run.box(trajdotlammpstrj)
 
-    #run.apd()
-    run.etg()
-    #run.vtg()
-    #run.apd_single(
-    #               os.path.join(path, minfile),
-    #               os.path.join(path, mininfile)
-    #               )
-    #run.vp()
+        #run.apd()
+        run.etg()
+        #run.vtg()
+        #run.apd_single(
+        #               os.path.join(path, minfile),
+        #               os.path.join(path, mininfile)
+        #               )
+        #run.vp()
 
-    run.save_data()
+        run.save_data()
+
+    except Exception:
+        pass
 
     print('-'*79)
