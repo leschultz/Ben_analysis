@@ -65,21 +65,6 @@ for item in group:
     if np.isnan(y).any():
         continue
 
-    # Fitting
-    points = 100
-    start = 0
-    xfit = np.linspace(start, max(x), points)
-
-    iterlim = 1000000000
-
-    # Arrhenius
-    mode_coupling_popt, mode_coupling_pcov = curve_fit(
-                                                       mode_coupling,
-                                                       x,
-                                                       y,
-                                                       maxfev=iterlim
-                                                       )
-
     fig, ax = pl.subplots()
 
     ax.plot(x, y, marker='.', color='b', linestyle='none', label='Tg')
@@ -97,6 +82,4 @@ for item in group:
     print('Saving: '+name)
 
     fig.savefig(name, format='png')
-
-    pl.show()
     pl.close('all')
