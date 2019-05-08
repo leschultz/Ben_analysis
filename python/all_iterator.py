@@ -17,7 +17,7 @@ testdotout = 'test.out'
 depdotin = 'dep.in'
 
 # The top range of temperature for Tg analysis
-max_temp = 500
+max_temp = float(sys.argv[2])
 
 # Loop for each path
 for item in os.walk(sys.argv[1]):
@@ -34,18 +34,22 @@ for item in os.walk(sys.argv[1]):
     if 'minimization' in path:
         continue
 
-    run = job(path, datadirname, plotdirname)
+    try:
+        run = job(path, datadirname, plotdirname)
 
-    run.input_file(depdotin)
-    run.sys(testdotout)
-    run.box(trajdotlammpstrj)
+        run.input_file(depdotin)
+        run.sys(testdotout)
+        run.box(trajdotlammpstrj)
 
-    #run.find_tl(edges=5, faces=10)
-    run.etg(max_temp=max_temp)
-    #run.apd_single(
-    #               os.path.join(path, minfile),
-    #               os.path.join(path, mininfile)
-    #               )
-    #run.vp()
+        #run.find_tl(edges=5, faces=10)
+        run.etg(max_temp=max_temp)
+        #run.apd_single(
+        #               os.path.join(path, minfile),
+        #               os.path.join(path, mininfile)
+        #               )
+        #run.vp()
+
+    except Exception:
+        pass
 
     print('-'*79)

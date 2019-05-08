@@ -1,4 +1,7 @@
 #!/bin/bash
 
+# Max Temperature of Tg analysis
+max_temp=700
+
 # Accepts the directory with all of the runs as the argument
-python3 python/all_iterator.py '../' 
+python3 python/all_iterator.py '../' ${max_temp}

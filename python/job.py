@@ -372,6 +372,14 @@ class job:
                        label='data'
                        )
 
+            ax[0].axvline(
+                          max_temp,
+                          linestyle='--',
+                          color='r',
+                          label='cutoff = '+str(max_temp)+' [K]'
+                          )
+
+
             ax[0].set_ylabel('E-3kT [K/atom]')
             ax[0].grid()
             ax[0].legend()
@@ -379,7 +387,7 @@ class job:
             ax[1].plot(
                        xcut,
                        ycut,
-                       marker='*',
+                       marker='.',
                        linestyle='none',
                        color='b',
                        label='data'
