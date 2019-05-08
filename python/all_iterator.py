@@ -31,7 +31,7 @@ for item in os.walk(sys.argv[1]):
     if 'minimization' in path:
         continue
 
-    run = job(path)
+    run = job(path, datadirname, plotdirname)
 
     run.input_file(depdotin)
     run.sys(testdotout)

@@ -34,20 +34,24 @@ class job:
     Setup all the data per job for analysis.
     '''
 
-    def __init__(self, path):
+    def __init__(self, path, data_path, plot_path):
         '''
-        Load all data needed from a job for analysis.
+        Create all the paths needed to save analysis data.
         '''
 
         # The location of the job
         self.path = path
 
-        # Save path for plots
-        self.plotpath = os.path.join(self.path, 'analysis_plots')
+        # Save paths
+        self.datapath = os.path.join(self.path, data_path)
+        self.plotpath = os.path.join(self.path, plot_path)
 
-        # The name of saving directories
-        self.datadirname = 'analysis_data'
-        self.plotdirname = 'analysis_plots'
+        # Create a directory for the analysis files
+        if not os.path.exists(self.datapath):
+            os.makedirs(self.datapath)
+
+        if not os.path.exists(self.plotpath):
+            os.makedirs(self.plotpath)
 
         print('Analysis for: '+path)
 
@@ -86,8 +90,9 @@ class job:
         '''
 
         try:
-            self.timestep
+            self.file_dep
         except Exception:
+
             message = 'Need to specify input file first.'
             raise ValueError(message)
 
@@ -109,7 +114,7 @@ class job:
         '''
 
         try:
-            self.timestep
+            self.file_dep
 
         except Exception:
             message = 'Need to specify input file.'
@@ -151,22 +156,22 @@ class job:
 
         dfelprops = pd.DataFrame(elements).T
 
-        self.dfelprops = dfelprops  # The properties of elements
-
     def volume(self):
         '''
         Calculate the volume from box dimensions.
 
         inputs:
             self = The object reference
+
         outputs:
-            self.dfvol = The volumes for trajectory snapshots
+            dfvol = The volumes for trajectory snapshots
         '''
 
         print('Calculating volume')
 
         try:
-            self.dftraj
+            self.file_trajs
+
         except Exception:
             message = 'Need to specify trajectory file.'
             raise ValueError(message)
@@ -178,13 +183,13 @@ class job:
         df['dy'] = self.dftraj['yhi']-self.dftraj['ylo']  # Am
         df['dz'] = self.dftraj['zhi']-self.dftraj['zlo']  # Am
 
-        self.dfvol = pd.DataFrame()
+        dfvol = pd.DataFrame()
 
         # Find the box volume
-        self.dfvol['time'] = self.dftraj['time']
-        self.dfvol['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
+        dfvol['time'] = self.dftraj['time']
+        dfvol['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
 
-        return self.dfvol
+        return dfvol
 
     def etg(self, write=True, plot=True):
         '''
@@ -192,21 +197,22 @@ class job:
 
         inputs:
             self = The object reference
+            write = Whether or not to save Tg
+
         outputs:
-            self.tgfrome = The Tg
-            self.dfetg = The data used to determine Tg
+            tg = The Tg
         '''
 
         print('Calculating Tg from E-3kT')
 
         try:
-            self.dfsys
+            self.file_system
         except Exception:
             message = 'Need to specify LAMMPS output file.'
             raise ValueError(message)
 
         try:
-            self.natoms
+            self.file_trajs
         except Exception:
             message = 'Need to specify trajectory file.'
             raise ValueError(message)
@@ -249,25 +255,14 @@ class job:
 
         tg, left, right, ldata, rdata, middle_rmse = opt(xfitcut, yfitcut)
 
-        self.tgfrome = tg
-        self.dfetg = dfcool
-
         if write:
 
-            # Create a directory for the analysis files
-            savepath = os.path.join(self.path, self.datadirname)
-            if not os.path.exists(savepath):
-                os.makedirs(savepath)
-
             # Export the glass transition temperature
-            with open(os.path.join(savepath, 'tg_e.txt'), 'w+') as outfile:
-                outfile.write(str(self.tgfrome))
+            write_name = os.path.join(self.datapath, 'tg_e.txt')
+            with open(write_name, 'w+') as outfile:
+                outfile.write(str(tg))
 
         if plot:
-
-            # Create the path to work in
-            if not os.path.exists(self.plotpath):
-                os.makedirs(self.plotpath)
 
             fig, ax = pl.subplots(3)
 
@@ -352,7 +347,7 @@ class job:
             fig.savefig(os.path.join(self.plotpath, 'etg_msqe'))
             pl.close('all')
 
-        return self.tgfrome, self.dfetg
+        return tg
 
     def apd_single(self, traj_path, in_path, write=True):
         '''
@@ -361,9 +356,10 @@ class job:
         inputs:
             traj_path = Path with the trajectory snapshots name
             in_path = The path to the input file.
+            write = Whether or not to save the APD
 
         outputs:
-            self.apd_snapshot = The APD for the last trajectory snapsot
+            apd_last = The APD for the last trajectory snapsot
         '''
 
         print('Calculating APD from: '+traj_path)
@@ -423,13 +419,9 @@ class job:
 
         if write:
 
-            # Create a directory for the analysis files
-            savepath = os.path.join(self.path, self.datadirname)
-            if not os.path.exists(savepath):
-                os.makedirs(savepath)
-
             # Export the glass transition temperature
-            with open(os.path.join(savepath, 'atp_single.txt'), 'w+') as outfile:
+            write_name = os.path.join(self.datapath, 'atp_single.txt')
+            with open(write_name, 'w+') as outfile:
                 outfile.write(str(apd_last))
 
 
@@ -448,8 +440,11 @@ class job:
             self = The object reference
             edge_count = The number of VP indexes considered
             threshold = The maximum length for a VP edge
-            savedata = Whether or not to save the fractions and temperatures
+            write = Whether or not to save the fractions and temperatures
             saveplot = Whether or not to plot the fractions and temperatures
+
+        outputs:
+            dfv = A dataframe containing VP variance and variety
         '''
 
         print(
@@ -457,7 +452,7 @@ class job:
               )
 
         try:
-            self.dftraj
+            self.file_trajs
 
         except Exception:
             message = 'Need to specify trajectory file.'
@@ -471,7 +466,7 @@ class job:
             raise ValueError(message)
 
         try:
-            self.dfsys
+            self.file_system
 
         except Exception:
             message = 'Need to specify LAMMPS output file.'
@@ -535,20 +530,13 @@ class job:
         dfv['max variance'] = variance
 
         # Create a directory for the analysis files
-        savepath = os.path.join(self.path, self.datadirname)
-        if not os.path.exists(savepath):
-            os.makedirs(savepath)
-
         if write:
             dfv.to_csv(
-                       os.path.join(savepath, 'top_vp_fractions.txt'),
+                       os.path.join(self.datapath, 'top_vp_fractions.txt'),
                        index=False
                        )
 
         if saveplot:
-            # Create the path to work in
-            if not os.path.exists(self.plotpath):
-                os.makedirs(self.plotpath)
 
             # Plot variance
             fig, ax = pl.subplots()
@@ -589,3 +577,5 @@ class job:
             fig.savefig(os.path.join(self.plotpath, 'fracs_variety'))
 
             pl.close('all')
+
+        return dfv
