@@ -1,9 +1,11 @@
 from PyQt5 import QtGui  # Added to be able to import ovito
 
 from scipy.interpolate import UnivariateSpline as interpolate
+from scipy.optimize import curve_fit
 
 from matplotlib import pyplot as pl
 from scipy.signal import argrelextrema
+
 import pymatgen as mg
 import pandas as pd
 import scipy as sc
@@ -26,7 +28,15 @@ def volume_sphere(r):
     Calculate of a sphere given a radius.
     '''
 
-    return 4./3.*sc.pi*r**3.
+    return 4.0/3.0*sc.pi*r**3.0
+
+
+def sigmoid(x, a, b):
+    '''
+    A sigmoid function
+    '''
+
+    return 1.0/(1.0+np.exp(-a*(x-b)))
 
 
 class job:
@@ -191,13 +201,109 @@ class job:
 
         return dfvol
 
-    def etg(self, write=True, plot=True):
+    def find_tl(
+                self,
+                edges=5,
+                faces=10,
+                lim=0.1,
+                threshold=0.1,
+                write=True,
+                plot=True
+                ):
+        '''
+        Compute the liquidus temperature based on VP curve.
+
+        inputs:
+            self = The object reference
+            edges = The number of VP edges
+            faces = The number of minimum faces for the specified edges
+            lim = The threshold for the upper and lower cut values
+            threshold = The maximum length for a VP edge
+            write = Whether or not to save the fractions and temperatures
+            plot = Whether or not to plot the fractions and temperatures
+
+        outputs:
+            tl = The liquidus temperature
+        '''
+
+        edges -= 1  # Compensate for indexing
+
+        # Merge dfsys and dftraj on matching steps
+        df = pd.merge(
+                      self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
+                      self.dftraj, on=['Step', 'time']
+                      )
+
+        condition = df['Step'] >= self.hold1
+        df = df[condition]
+        df = df.reset_index(drop=True)
+
+        # Load input data and create an ObjectNode with a data pipeline.
+        node = import_file(self.file_trajs, multiple_frames=True)
+
+        voro = VoronoiAnalysisModifier(
+                                       compute_indices=True,
+                                       use_radii=False,
+                                       edge_threshold=threshold
+                                       )
+
+        node.modifiers.append(voro)
+
+        fractions = []
+        for frame in df['frame']:
+            out = node.compute(frame)
+            indexes = out.particle_properties['Voronoi Index'].array
+
+            indexes = indexes[:, edges]  # Gather edge bin
+            count = sum(indexes >= faces)  # Count condition
+            fraction = count/self.natoms  # Calculate fraction
+
+            fractions.append(fraction)
+
+        df['fractions'] = fractions
+        df = df.sort_values(by=['Temp'])
+
+        x = df['Temp'].values
+        y = df['fractions'].values
+
+        k = 5
+        s = 1
+        spl = interpolate(x=x, y=y, k=k, s=s)
+        xfit = np.linspace(np.min(x), np.max(x), 100)
+        yfit = spl(xfit)
+
+        if plot:
+
+            fig, ax = pl.subplots()
+            
+            ax.plot(x, y, marker='.', linestyle='none', label='data')
+            ax.plot(
+                    xfit,
+                    yfit,
+                    color='g',
+                    label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
+                    )
+
+            xlabel = 'Temperature [K]'
+            ylabel = r'Fractions of $n_{'+str(edges+1)+'} >= '+str(faces)+'$'
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+
+            ax.grid()
+            ax.legend()
+
+            fig.tight_layout()
+            pl.show()
+
+    def etg(self, max_temp=1000, write=True, plot=True):
         '''
         Calculate the glass transition temperature based on E-3kt.
 
         inputs:
             self = The object reference
+            max_temp = The maximum temperature for analysis
             write = Whether or not to save Tg
+            plot = Whether or not to save plot of data
 
         outputs:
             tg = The Tg
@@ -233,6 +339,10 @@ class job:
 
         x = dfcool['Temp'].values
         y = dfcool['E-3kT'].values
+
+        condition = x <= max_temp
+        x = x[condition]
+        y = y[condition]
 
         # Find the point where maximum slope occurs
         k = 5
@@ -431,14 +541,13 @@ class job:
            self,
            threshold=0.1,
            write=True,
-           saveplot=True
+           plot=True
            ):
         '''
         Do the cluster analysis for n_5 >= 10 Voronoi polyhedra (VP).
 
         inputs:
             self = The object reference
-            edge_count = The number of VP indexes considered
             threshold = The maximum length for a VP edge
             write = Whether or not to save the fractions and temperatures
             saveplot = Whether or not to plot the fractions and temperatures
@@ -536,7 +645,7 @@ class job:
                        index=False
                        )
 
-        if saveplot:
+        if plot:
 
             # Plot variance
             fig, ax = pl.subplots()
