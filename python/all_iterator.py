@@ -17,7 +17,7 @@ testdotout = 'test.out'
 depdotin = 'dep.in'
 
 # The top range of temperature for Tg analysis
-max_temp = 1500
+max_temp = 500
 
 # Loop for each path
 for item in os.walk(sys.argv[1]):

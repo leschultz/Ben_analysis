@@ -340,26 +340,13 @@ class job:
         x = dfcool['Temp'].values
         y = dfcool['E-3kT'].values
 
+        # Spline fit of cut region
+        k, s = (5, 1)
         condition = x <= max_temp
-        x = x[condition]
-        y = y[condition]
-
-        # Find the point where maximum slope occurs
-        k = 5
-        s = 1
-        spl = interpolate(x=x, y=y, k=k, s=s)
-        xfit = np.linspace(x[0], x[-1], 100)
-        yfit = spl(xfit)
-
-        dy = np.gradient(yfit)
-
-        # Cut by maximum slope to ensure top linear reagion (could improve)
-        xlim = xfit[np.argmax(dy)]
-        condition = x <= xlim
         xcut = x[condition]
         ycut = y[condition]
 
-        spl = interpolate(x=x, y=y, k=k, s=s)
+        spl = interpolate(x=xcut, y=ycut, k=k, s=s)
         xfitcut = np.linspace(xcut[0], xcut[-1], 100)
         yfitcut = spl(xfitcut)
 
@@ -374,7 +361,7 @@ class job:
 
         if plot:
 
-            fig, ax = pl.subplots(3)
+            fig, ax = pl.subplots(2)
 
             ax[0].plot(
                        x,
@@ -384,36 +371,12 @@ class job:
                        color='b',
                        label='data'
                        )
-            ax[0].plot(
-                       xfit,
-                       yfit,
-                       linestyle=':',
-                       label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
-                       )
 
             ax[0].set_ylabel('E-3kT [K/atom]')
             ax[0].grid()
             ax[0].legend()
 
             ax[1].plot(
-                       xfit,
-                       dy,
-                       linestyle='-',
-                       label='Spline First Derivative'
-                       )
-            ax[1].axvline(
-                          xlim,
-                          linestyle='--',
-                          color='r',
-                          label='Cut Point at T='+str(xlim)+' [K]'
-                          )
-
-            ax[1].set_xlabel('Temperature [K]')
-
-            ax[1].grid()
-            ax[1].legend()
-
-            ax[2].plot(
                        xcut,
                        ycut,
                        marker='*',
@@ -421,22 +384,22 @@ class job:
                        color='b',
                        label='data'
                        )
-            ax[2].plot(
+            ax[1].plot(
                        xfitcut,
                        yfitcut,
                        linestyle='-',
                        label='Cut Univariate Spline (k='+str(k)+', s='+str(s)+')'
                        )
                 
-            ax[2].axvline(
+            ax[1].axvline(
                           tg,
                           linestyle='--',
                           color='r',
                           label='Tg = '+str(tg)+' [K]'
                           )
             
-            ax[2].grid()
-            ax[2].legend()
+            ax[1].grid()
+            ax[1].legend()
 
             fig.set_size_inches(15, 10, forward=True)
             fig.savefig(os.path.join(self.plotpath, 'etg'))
