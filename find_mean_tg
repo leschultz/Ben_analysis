@@ -1,4 +1,4 @@
 #!/bin/bash
 
-# Usage: python3 average_tg/make_tg_df.py $DIRECTORY_WITH_RUNS
-python3 python/make_tg_df.py "../"
+# Usage: python3 average_tg/make_tg_df.py <time_step> <change in temperature> <set directory> <data export> <plot export>
+python3 python/setplotter.py 0.001 50 ../ ../analysis_data ../analysis_plots
