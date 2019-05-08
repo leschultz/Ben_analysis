@@ -13,7 +13,6 @@ from ovito.modifiers import VoronoiAnalysisModifier
 from ovito.io import import_file
 
 from line_intersector import opt
-from kneefinder import *
 
 import traj
 import test
@@ -49,8 +48,6 @@ class job:
         # The name of saving directories
         self.datadirname = 'analysis_data'
         self.plotdirname = 'analysis_plots'
-
-        self.calculations = []  # The calculations done
 
         print('Analysis for: '+path)
 
@@ -88,6 +85,12 @@ class job:
             testdotout = The name of the out file
         '''
 
+        try:
+            self.timestep
+        except Exception:
+            message = 'Need to specify input file first.'
+            raise ValueError(message)
+
         file_system = os.path.join(self.path, testdotout)  # Output file
         self.file_system = file_system
 
@@ -95,8 +98,6 @@ class job:
         self.dfsys = test.info(file_system)
 
         self.dfsys['time'] = self.dfsys['Step']*self.timestep
-
-        self.calculations.append('system')
 
     def box(self, trajdotlammpstrj):
         '''
@@ -106,6 +107,13 @@ class job:
             self = The object reference
             trajdotlammpstrj = The name of the input file
         '''
+
+        try:
+            self.timestep
+
+        except Exception:
+            message = 'Need to specify input file.'
+            raise ValueError(message)
 
         file_trajs = os.path.join(self.path, trajdotlammpstrj)  # Trajectories
         self.file_trajs = file_trajs
@@ -145,8 +153,6 @@ class job:
 
         self.dfelprops = dfelprops  # The properties of elements
 
-        self.calculations.append('box')
-
     def volume(self):
         '''
         Calculate the volume from box dimensions.
@@ -162,7 +168,8 @@ class job:
         try:
             self.dftraj
         except Exception:
-            job.box(self)
+            message = 'Need to specify trajectory file.'
+            raise ValueError(message)
 
         df = pd.DataFrame()
 
@@ -177,77 +184,9 @@ class job:
         self.dfvol['time'] = self.dftraj['time']
         self.dfvol['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
 
-        self.calculations.append('volume')
-
         return self.dfvol
 
-    def apd(self, plot=True):
-        '''
-        Calculate the atomic packing density.
-
-        inputs:
-            self = The object reference
-        outputs:
-            self.dfapd = The APD for trajectory snapshots
-
-        '''
-
-        print('Calculating APD')
-
-        try:
-            self.dfsys
-        except Exception:
-            job.sys(self)
-
-        try:
-            self.dfvol
-        except Exception:
-            job.volume(self)
-
-        # Merge dfsys and dfvol on matching steps
-        df = pd.merge(
-                      self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
-                      self.dfvol, on=['time']
-                      )
-
-        # Calculate the atomic packing density (APD)
-        numerator = np.sum(self.dfelprops['counts']*self.dfelprops['volume'])
-
-        # Create a dataframe for APD
-        self.dfapd = pd.DataFrame()
-        self.dfapd['Temp'] = df['Temp']
-        self.dfapd['APD'] = numerator/df['Volume']
-
-        if plot:
-
-            # Create the path to work in
-            if not os.path.exists(self.plotpath):
-                os.makedirs(self.plotpath)
-
-            # Plot only the cooling data
-            fig, ax = pl.subplots()
-
-            ax.plot(
-                    self.dfapd['Temp'][df['Step'] >= self.hold1],
-                    self.dfapd['APD'][df['Step'] >= self.hold1],
-                    marker='.',
-                    linestyle='none'
-                    )
-
-            ax.set_xlabel('Temperature [K]')
-            ax.set_ylabel('ATD [-]')
-            ax.grid()
-
-            fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'atp'))
-
-            pl.close('all')
-
-        self.calculations.append('apd')
-
-        return self.dfapd
-
-    def etg(self, plot=True):
+    def etg(self, write=True, plot=True):
         '''
         Calculate the glass transition temperature based on E-3kt.
 
@@ -263,12 +202,14 @@ class job:
         try:
             self.dfsys
         except Exception:
-            job.sys(self)
+            message = 'Need to specify LAMMPS output file.'
+            raise ValueError(message)
 
         try:
-            self.dfvol
+            self.natoms
         except Exception:
-            job.volume(self)
+            message = 'Need to specify trajectory file.'
+            raise ValueError(message)
 
         k = sc.constants.physical_constants['Boltzmann constant in eV/K']
 
@@ -311,6 +252,17 @@ class job:
         self.tgfrome = tg
         self.dfetg = dfcool
 
+        if write:
+
+            # Create a directory for the analysis files
+            savepath = os.path.join(self.path, self.datadirname)
+            if not os.path.exists(savepath):
+                os.makedirs(savepath)
+
+            # Export the glass transition temperature
+            with open(os.path.join(savepath, 'tg_e.txt'), 'w+') as outfile:
+                outfile.write(str(self.tgfrome))
+
         if plot:
 
             # Create the path to work in
@@ -319,25 +271,64 @@ class job:
 
             fig, ax = pl.subplots(3)
 
-            ax[0].plot(x, y, marker='.', linestyle='none', color='b', label='data')
-            ax[0].plot(xfit, yfit, linestyle=':', label='Univariate Spline (k='+str(k)+', s='+str(s)+')')
+            ax[0].plot(
+                       x,
+                       y,
+                       marker='.',
+                       linestyle='none',
+                       color='b',
+                       label='data'
+                       )
+            ax[0].plot(
+                       xfit,
+                       yfit,
+                       linestyle=':',
+                       label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
+                       )
 
             ax[0].set_ylabel('E-3kT [K/atom]')
             ax[0].grid()
             ax[0].legend()
 
-            ax[1].plot(xfit, dy, linestyle='-', label='Spline First Derivative')
-            ax[1].axvline(xlim, linestyle='--', color='r', label='Cut Point at T='+str(xlim)+' [K]')
+            ax[1].plot(
+                       xfit,
+                       dy,
+                       linestyle='-',
+                       label='Spline First Derivative'
+                       )
+            ax[1].axvline(
+                          xlim,
+                          linestyle='--',
+                          color='r',
+                          label='Cut Point at T='+str(xlim)+' [K]'
+                          )
 
             ax[1].set_xlabel('Temperature [K]')
 
             ax[1].grid()
             ax[1].legend()
 
-            ax[2].plot(xcut, ycut, marker='*', linestyle='none', color='b', label='data')
-            ax[2].plot(xfitcut, yfitcut, linestyle='-', label='Cut Univariate Spline (k='+str(k)+', s='+str(s)+')')
+            ax[2].plot(
+                       xcut,
+                       ycut,
+                       marker='*',
+                       linestyle='none',
+                       color='b',
+                       label='data'
+                       )
+            ax[2].plot(
+                       xfitcut,
+                       yfitcut,
+                       linestyle='-',
+                       label='Cut Univariate Spline (k='+str(k)+', s='+str(s)+')'
+                       )
                 
-            ax[2].axvline(tg, linestyle='--', color='r', label='Tg = '+str(tg)+' [K]')
+            ax[2].axvline(
+                          tg,
+                          linestyle='--',
+                          color='r',
+                          label='Tg = '+str(tg)+' [K]'
+                          )
             
             ax[2].grid()
             ax[2].legend()
@@ -361,84 +352,11 @@ class job:
             fig.savefig(os.path.join(self.plotpath, 'etg_msqe'))
             pl.close('all')
 
-        self.calculations.append('etg')
-
         return self.tgfrome, self.dfetg
 
-    def vtg(self, plot=True):
+    def apd_single(self, traj_path, in_path, write=True):
         '''
-        Calculate the glass transition temperature based on specific volume.
-
-        inputs:
-            self = The object reference
-        outputs:
-            self.tgfromv = The Tg
-            self.dfvtg = The data used to determine Tg
-        '''
-
-        print('Calculating Tg from specific volume')
-
-        try:
-            self.dfsys
-        except Exception:
-            job.sys(self)
-
-        try:
-            self.dfvol
-        except Exception:
-            job.volume(self)
-
-        k = sc.constants.physical_constants['Boltzmann constant in eV/K']
-
-        df = pd.DataFrame()
-
-        v = self.dfvol['Volume']/self.natoms
-
-        # Merge dfsys and dfvol on matching steps to get temp
-        dfmerge = pd.merge(self.dfsys, self.dfvol, on=['time'])
-
-        df['Temp'] = dfmerge['Temp']
-        df['v'] = v
-
-        # Use data at and after start of cooling
-        condition = dfmerge['Step'] >= self.hold1
-        dfcool = df[condition]
-        dfcool = dfcool.sort_values(by=['Temp'])  # Needed for spline
-
-        # Find the polynomial coefficients for a fit
-        tfit, vfit, ddvfit, kneeindex = knees(
-                                              dfcool['Temp'].values,
-                                              dfcool['v'].values
-                                              )
-
-        self.tgfromv = tfit[kneeindex]
-
-        self.dfvtg = df
-
-        if plot:
-
-            # Create the path to work in
-            if not os.path.exists(self.plotpath):
-                os.makedirs(self.plotpath)
-
-            plotknee(
-                     dfcool['Temp'],
-                     dfcool['v'],
-                     tfit,
-                     vfit,
-                     ddvfit,
-                     kneeindex,
-                     self.plotpath,
-                     'vtg'
-                     )
-
-        self.calculations.append('vtg')
-
-        return self.tgfromv, self.dfvtg
-
-    def apd_single(self, traj_path, in_path):
-        '''
-        Calculate the APD for a single trajectory.
+        Calculate the APD from the last trajectories.
 
         inputs:
             traj_path = Path with the trajectory snapshots name
@@ -501,16 +419,26 @@ class job:
         d /= df['volume']
         df['apd'] = d
 
-        self.apd_snapshot = df['apd'].values[-1]
+        apd_last = df['apd'].values[-1]
 
-        self.calculations.append('apd_single')
+        if write:
 
-        return self.apd_snapshot
+            # Create a directory for the analysis files
+            savepath = os.path.join(self.path, self.datadirname)
+            if not os.path.exists(savepath):
+                os.makedirs(savepath)
+
+            # Export the glass transition temperature
+            with open(os.path.join(savepath, 'atp_single.txt'), 'w+') as outfile:
+                outfile.write(str(apd_last))
+
+
+        return apd_last
 
     def vp(
            self,
            threshold=0.1,
-           savedata=True,
+           write=True,
            saveplot=True
            ):
         '''
@@ -530,18 +458,24 @@ class job:
 
         try:
             self.dftraj
+
         except Exception:
-            print('Need to compute simulation box properties.')
+            message = 'Need to specify trajectory file.'
+            raise ValueError(message)
 
         try:
             self.file_dep
+
         except Exception:
-            print('Need to parse input file.')
+            message = 'Need to specify input file.'
+            raise ValueError(message)
 
         try:
             self.dfsys
+
         except Exception:
-            job.sys(self)
+            message = 'Need to specify LAMMPS output file.'
+            raise ValueError(message)
 
         # Merge dfsys and dftraj on matching steps
         df = pd.merge(
@@ -605,9 +539,9 @@ class job:
         if not os.path.exists(savepath):
             os.makedirs(savepath)
 
-        if savedata:
+        if write:
             dfv.to_csv(
-                       os.path.join(savepath, 'fracs.txt'),
+                       os.path.join(savepath, 'top_vp_fractions.txt'),
                        index=False
                        )
 
@@ -655,64 +589,3 @@ class job:
             fig.savefig(os.path.join(self.plotpath, 'fracs_variety'))
 
             pl.close('all')
-
-    def save_data(self):
-        '''
-        Save all data as csv.
-        '''
-
-        print('Saving data')
-
-        # Create a directory for the analysis files
-        savepath = os.path.join(self.path, self.datadirname)
-        if not os.path.exists(savepath):
-            os.makedirs(savepath)
-
-        # Save system data
-        if 'system' in self.calculations:
-            self.dfsys.to_csv(
-                              os.path.join(savepath, 'system.txt'),
-                              index=False
-                              )
-
-        # Save information of simulation box
-        if 'box' in self.calculations:
-            self.dftraj.to_csv(
-                               os.path.join(savepath, 'boxboundary.txt'),
-                               index=False
-                               )
-
-        # Save APD data
-        if 'apd' in self.calculations:
-            self.dfapd.to_csv(
-                              os.path.join(savepath, 'apd.txt'),
-                              index=False
-                              )
-
-        # Save Tg data from E-3kT
-        if 'etg' in self.calculations:
-            self.dfetg.to_csv(
-                              os.path.join(savepath, 'etg.txt'),
-                              index=False
-                              )
-
-            # Export the glass transition temperature
-            with open(os.path.join(savepath, 'tg_e.txt'), 'w+') as outfile:
-                outfile.write(str(self.tgfrome))
-
-        # Save Tg data from specific volume
-        if 'vtg' in self.calculations:
-            self.dfetg.to_csv(
-                              os.path.join(savepath, 'vtg.txt'),
-                              index=False
-                              )
-
-            # Export the glass transition temperature
-            with open(os.path.join(savepath, 'tg_v.txt'), 'w+') as outfile:
-                outfile.write(str(self.tgfromv))
-
-        # Save APD from a specific trajectory file
-        if 'apd_single' in self.calculations:
-            name = os.path.join(savepath, 'apd_single.txt')
-            with open(name, 'w+') as outfile:
-                outfile.write(str(self.apd_snapshot))
