@@ -356,6 +356,8 @@ class job:
         ax.legend()
 
         fig.tight_layout()
+        mng = pl.get_current_fig_manager()
+        mng.full_screen_toggle()
 
         click = fig.ginput(n=-1, mouse_add=1, mouse_pop=3)
 
