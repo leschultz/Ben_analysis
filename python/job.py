@@ -357,10 +357,10 @@ class job:
 
         fig.tight_layout()
 
-        pl.show(block=False)
-        pl.pause(0.1)
+        click = fig.ginput(n=-1, mouse_add=1, mouse_pop=3)
 
-        max_temp = float(input('Upper Cutoff for Temperature?'))
+        max_temp = click[-1][0]
+        print('Upper cutoff temperature set to '+str(max_temp)+' [K]')
 
         pl.close('all')
 
