@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+
+'''
+Copy a folder and contents in this directory to each composition.
+'''
+
+import shutil
+import os
+
+directory = '../analysis_scripts'  # The name of the directory to be copied
+data_path = '../'  # The path where data are located 
+
+# For all possible directories
+for item in os.walk(data_path):
+
+    path = item[0]  # The path
+
+    items = path.split('/')
+
+    if len(items) != 4:
+        continue
+
+    if '-' not in items[2]:
+        continue
+
+    # Remove folder and contents
+    shutil.copytree(directory, path+'/'+directory.split('/')[-1])
+    print('Copying '+directory+' folder to '+path)

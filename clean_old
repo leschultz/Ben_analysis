@@ -4,7 +4,8 @@
 Delete recursively folders and contents matching a list input.
 '''
 
-remove_list = ['analysis_data', 'analysis_plots']  # Delete folders
+# Delete folders
+remove_list = ['analysis_data', 'analysis_plots', 'analysis_scripts']
 
 import shutil
 import sys
