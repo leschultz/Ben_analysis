@@ -352,7 +352,6 @@ class job:
                 )
 
         ax.set_ylabel('E-3kT [K/atom]')
-        ax.grid()
         ax.legend()
 
         fig.tight_layout()
