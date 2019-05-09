@@ -340,6 +340,30 @@ class job:
         x = dfcool['Temp'].values
         y = dfcool['E-3kT'].values
 
+        fig, ax = pl.subplots()
+
+        ax.plot(
+                x,
+                y,
+                marker='.',
+                linestyle='none',
+                color='b',
+                label='data'
+                )
+
+        ax.set_ylabel('E-3kT [K/atom]')
+        ax.grid()
+        ax.legend()
+
+        fig.tight_layout()
+
+        pl.show(block=False)
+        pl.pause(0.1)
+
+        max_temp = float(input('Upper Cutoff for Temperature?'))
+
+        pl.close('all')
+
         # Spline fit of cut region
         k, s = (5, 1)
         condition = x <= max_temp
