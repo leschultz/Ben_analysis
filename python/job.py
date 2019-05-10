@@ -301,7 +301,7 @@ class job:
             fig.tight_layout()
             pl.show()
 
-    def etg(self, max_temp=1000, write=True, plot=True):
+    def etg(self, max_temp=1000, write=True, plot=True, verbose=True):
         '''
         Calculate the glass transition temperature based on E-3kt.
 
@@ -315,7 +315,8 @@ class job:
             tg = The Tg
         '''
 
-        print('Calculating Tg from E-3kT')
+        if verbose:
+            print('Calculating Tg from E-3kT')
 
         try:
             self.file_system
