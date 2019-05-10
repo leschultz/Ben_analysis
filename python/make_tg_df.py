@@ -12,7 +12,7 @@ datadirname = 'analysis_data'
 externaldirname = 'cryxdata'
 
 etgfile = 'tg_e.txt'
-vtgfile = 'tg_v.txt'
+etgcutfile = 'tg_e_t_cutoff.txt'
 
 cxpath = [externaldirname, 'crystalinfo.txt']
 dfcx = pd.read_csv(join(*cxpath))
@@ -24,7 +24,7 @@ columns = [
            'Steps [-]',
            'Job',
            'Tg from E-3kT Curve [K]',
-           'Tg from Specific Volume Curve [K]',
+           'Upper Temperature Cutoff [K]'
            ]
 
 dftg = pd.DataFrame(columns=columns)
@@ -46,13 +46,14 @@ for item in os.walk(sys.argv[1]):
     else:
         etg = np.nan
 
-    vpath = join(item[0], vtgfile)
-    if os.path.exists(vpath):
-        vtg = np.loadtxt(vpath, dtype=float)
+    ecutpath = join(item[0], etgcutfile)
+    if os.path.exists(ecutpath):
+        etgcut = np.loadtxt(ecutpath, dtype=float)
     else:
-        vtg = np.nan
+        etgcut = np.nan
 
-    row = names+[etg, vtg]
+
+    row = names+[etg, etgcut]
 
     dftg.loc[count] = row  # Append a row to the dataframe
 
@@ -106,27 +107,17 @@ for item in group:
     efiltered = etg[abs(etg-emean) < nsig*estd]
     enremoved = en-len(efiltered)
 
+    ecut = item[1]['Upper Temperature Cutoff [K]']
+    ecutfiltered = ecut[abs(etg-emean) < nsig*estd]
+
     if efiltered.size == 0:
         enewmean = np.nan
         enewsem = np.nan
+        ecutnewmean = np.nan
     else:
         enewmean = np.mean(efiltered)
         enewsem = st.sem(efiltered)
-
-    vtg = item[1]['Tg from Specific Volume Curve [K]']
-    vn = len(vtg)
-
-    vmean = np.mean(vtg)
-    vstd = np.std(vtg)
-    vfiltered = vtg[abs(vtg-vmean) < nsig*vstd]
-    vnremoved = vn-len(vfiltered)
-
-    if vfiltered.size == 0:
-        vnewmean = np.nan
-        vnewsem = np.nan
-    else:
-        vnewmean = np.mean(vfiltered)
-        vnewsem = st.sem(vfiltered)
+        ecutnewmean = np.mean(ecutfiltered)
 
     row = [
            system,
@@ -134,12 +125,9 @@ for item in group:
            step,
            enewmean,
            enewsem,
+           ecutnewmean,
            en,
            enremoved,
-           vnewmean,
-           vnewsem,
-           vn,
-           vnremoved,
            ]
 
     dfmean.append(row)
@@ -148,15 +136,9 @@ meancolumns = mergecolumns[:-1]
 meancolumns += [
                 'Mean Tg from E-3kT Curve [K]',
                 'Sem Tg from E-3kT Curve [K]',
+                'Mean Upper Temperature Cutoff [K]',
                 'Jobs from Tg from E-3kT Curve [K]',
                 'Jobs outside '+str(nsig)+' sigma from Tg from E-3kT Curve [K]'
-                ]
-
-meancolumns += [
-                'Mean Tg from Specific Volume Curve [K]',
-                'Sem Tg from Specific Volume Curve [K]',
-                'Jobs from Tg from Specific Volume Curve [K]',
-                'Jobs outside '+str(nsig)+' sigma from Tg from Specific Volume Curve [K]'
                 ]
 
 df = pd.DataFrame(dfmean, columns=meancolumns)

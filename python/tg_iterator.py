@@ -69,6 +69,10 @@ for item in os.walk(sys.argv[1]):
 
     fig.tight_layout()
 
+    # Go full screen
+    mng = pl.get_current_fig_manager()
+    mng.full_screen_toggle()
+
     plot_path = os.path.join(path, plotdirname)
 
     click = fig.ginput(n=-1, mouse_add=1, mouse_pop=3)
