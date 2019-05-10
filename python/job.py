@@ -366,6 +366,12 @@ class job:
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(tg))
 
+            # Export the upper temperature cutoff
+            write_name = os.path.join(self.datapath, 'tg_e_t_cutoff.txt')
+            with open(write_name, 'w+') as outfile:
+                outfile.write(str(max_temp))
+
+
         if plot:
 
             fig, ax = pl.subplots(2)
