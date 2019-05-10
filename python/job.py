@@ -114,6 +114,12 @@ class job:
 
         self.dfsys['time'] = self.dfsys['Step']*self.timestep
 
+        # Use data at and after start of cooling
+        condition = self.dfsys['Step'] >= self.hold1
+        dfcool = self.dfsys[condition]
+
+        return dfcool
+
     def box(self, trajdotlammpstrj):
         '''
         Gather trajectories from the trajectory file.
@@ -339,31 +345,6 @@ class job:
 
         x = dfcool['Temp'].values
         y = dfcool['E-3kT'].values
-
-        fig, ax = pl.subplots()
-
-        ax.plot(
-                x,
-                y,
-                marker='.',
-                linestyle='none',
-                color='b',
-                label='data'
-                )
-
-        ax.set_ylabel('E-3kT [K/atom]')
-        ax.legend()
-
-        fig.tight_layout()
-        mng = pl.get_current_fig_manager()
-        mng.full_screen_toggle()
-
-        click = fig.ginput(n=-1, mouse_add=1, mouse_pop=3)
-
-        max_temp = click[-1][0]
-        print('Upper cutoff temperature set to '+str(max_temp)+' [K]')
-
-        pl.close('all')
 
         # Spline fit of cut region
         k, s = (5, 1)
