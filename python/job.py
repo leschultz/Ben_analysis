@@ -416,6 +416,9 @@ class job:
             ax[1].grid()
             ax[1].legend()
 
+            ax[1].set_xlabel('Temperature [K]')
+            ax[1].set_ylabel('E-3kT [K/atom]')
+
             fig.set_size_inches(15, 10, forward=True)
             fig.savefig(os.path.join(self.plotpath, 'etg'))
             pl.close('all')
