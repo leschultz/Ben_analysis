@@ -39,7 +39,6 @@ for item in os.walk(sys.argv[1]):
     if 'minimization' in path:
         continue
 
-    #try:
     run = job(path, datadirname, plotdirname)
 
     run.input_file(depdotin)
@@ -47,7 +46,7 @@ for item in os.walk(sys.argv[1]):
     run.box(trajdotlammpstrj)
 
     temps = dfcool['Temp'].values
-    min_t = temps[-6]
+    min_t = temps[-6]  # Minimum number of point for spline to work
     max_t = max(temps)
 
     range_t = np.linspace(min_t, max_t, 100)
@@ -67,22 +66,29 @@ for item in os.walk(sys.argv[1]):
     ax.set_ylabel('Tg [K]')
 
     ax.grid()
-    ax.legend()
 
     fig.tight_layout()
 
     plot_path = os.path.join(path, plotdirname)
-    fig.savefig(os.path.join(plot_path, 'tg_upper_t_cutoff'))
 
     click = fig.ginput(n=-1, mouse_add=1, mouse_pop=3)
     tcut = click[-1][0]
+
+    ax.axvline(
+               tcut, 
+               linestyle=':', 
+               color='k', 
+               label='Upper Temperature Cutoff: '+str(tcut)+' [K]'
+               )
+
+    ax.legend(loc='upper center')
+
+    fig.savefig(os.path.join(plot_path, 'tg_upper_t_cutoff'))
+
     pl.close('all')
 
     print('Upper cutoff temperature set to '+str(tcut)+' [K]')
 
     run.etg(max_temp=tcut)
-
-    #except Exception:
-    #    pass
 
     print('-'*79)

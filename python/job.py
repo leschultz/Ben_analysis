@@ -405,6 +405,7 @@ class job:
                        color='b',
                        label='data'
                        )
+
             ax[1].plot(
                        xfitcut,
                        yfitcut,
@@ -435,13 +436,21 @@ class job:
             ax.plot(rdata[:, 0], rdata[:, 1], label='right fits')
             ax.plot(ldata[:, 0], middle_rmse, label='left and right fits')
 
+            ax.axvline(
+                       tg,
+                       linestyle='--',
+                       color='r',
+                       label='Tg = '+str(tg)+' [K]'
+                       )
+
+
             ax.set_xlabel('End Temperature [K]')
             ax.set_ylabel('RMSE')
             ax.grid()
             ax.legend()
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'etg_msqe'))
+            fig.savefig(os.path.join(self.plotpath, 'etg_rmse'))
             pl.close('all')
 
         return tg
