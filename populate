@@ -9,6 +9,7 @@ import os
 
 directory = '../analysis_scripts'  # The name of the directory to be copied
 data_path = '../'  # The path where data are located 
+dirset = '667'  # The name of the directory type to polulate
 
 # For all possible directories
 for item in os.walk(data_path):
@@ -17,10 +18,7 @@ for item in os.walk(data_path):
 
     items = path.split('/')
 
-    if len(items) != 4:
-        continue
-
-    if '-' not in items[2]:
+    if dirset != items[-1]:
         continue
 
     # Remove folder and contents

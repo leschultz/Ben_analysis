@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Accepts the directory with all of the runs as the argument
-python3 python/tg_iterator.py '../' 500 1200
+python3 python/tg_iterator.py '../'

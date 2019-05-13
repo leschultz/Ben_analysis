@@ -21,9 +21,6 @@ trajdotlammpstrj = 'traj.lammpstrj'
 testdotout = 'test.out'
 depdotin = 'dep.in'
 
-min_t = float(sys.argv[2])  # Min temp to start optimization
-max_t = float(sys.argv[3])  # Max temp to start optimization
-
 # Loop for each path
 for item in os.walk(sys.argv[1]):
 
