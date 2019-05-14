@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Usage: python3 average_tg/make_tg_df.py <time_step> <change in temperature> <set directory> <data export> <plot export>
+# Usage: python3 average_tg/make_tg_df.py <jobs containing tg information>
 
 python3 python/make_tg_df.py "../"
-#python3 python/tg_rates ../analysis_data/meantg.txt 0.000000000000001 s 50 K ../analysis_plots
-#python3 python/tg_setplotter.py 0.001 50 ../ ../analysis_data ../analysis_plots

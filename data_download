@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# Usage: python3 download/filecopier.py ORIGINAL_DATAPATH EXPORT_PATH
-python3 python/filecopier.py "/home/nerve/Documents/UW/google-drive/DMREF/md/Rc_database/comp_0pct_2pct/" "../"
