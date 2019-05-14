@@ -21,6 +21,5 @@ for item in os.walk(data_path):
     if dirset != items[-1]:
         continue
 
-    # Remove folder and contents
     shutil.copytree(directory, path+'/'+directory.split('/')[-1])
     print('Copying '+directory+' folder to '+path)

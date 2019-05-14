@@ -135,7 +135,7 @@ for item in group:
 meancolumns = mergecolumns[:-1]
 meancolumns += [
                 'Mean Tg from E-3kT Curve [K]',
-                'Sem Tg from E-3kT Curve [K]',
+                'SEM Tg from E-3kT Curve [K]',
                 'Mean Upper Temperature Cutoff [K]',
                 'Jobs from Tg from E-3kT Curve [K]',
                 'Jobs outside '+str(nsig)+' sigma from Tg from E-3kT Curve [K]'
