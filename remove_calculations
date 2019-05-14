@@ -4,12 +4,12 @@
 Delete recursively folders and contents matching a list input.
 '''
 
-# Delete folders
-remove_list = ['analysis_data', 'analysis_plots', 'analysis_scripts']
-
 import shutil
 import sys
 import os
+
+# Delete folders
+remove_list = ['analysis_data', 'analysis_plots', 'analysis_scripts']
 
 data_path = sys.argv[1]  # The path where data are located
 
@@ -18,6 +18,6 @@ for item in os.walk(data_path):
 
     path = item[0]  # The path
     for r in remove_list:  # Loop for folders to delete
-        if r in path:  #  Check if delete folder is in path
+        if r in path:  # Check if delete folder is in path
             shutil.rmtree(path)  # Remove folder and contents
             print('Removing: '+path)

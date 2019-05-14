@@ -1,39 +1,33 @@
-from job import job
-
+from scipy.signal import argrelextrema
 from matplotlib import pyplot as pl
 
-from scipy.signal import argrelextrema
+from job import job
+
 import numpy as np
 
 import sys
 import os
 
-datadirname = 'analysis_data'
-plotdirname = 'analysis_plots'
-minfile = os.path.join('100K_Structure_minimization', 'finaltraj.lammpstrj')
-mininfile = os.path.join(
-                         '100K_Structure_minimization',
-                         '100k_minimize_template.in'
-                         )
+jobs_dir = sys.argv[1]  # The job directories
+jobs_name = sys.argv[2]  # The generic job name
+
+datadirname = sys.argv[3]  # Name of data directory
+plotdirname = sys.argv[4]  # Name of plot directory
 
 # The name of important files for each job
-trajdotlammpstrj = 'traj.lammpstrj'
-testdotout = 'test.out'
-depdotin = 'dep.in'
+trajdotlammpstrj = sys.argv[5]  # Trajectories
+testdotout = sys.argv[6]  # LAMMPS print to screen
+depdotin = sys.argv[7]  # Input file
 
 # Loop for each path
-for item in os.walk(sys.argv[1]):
+for item in os.walk(jobs_dir):
 
     path = item[0]
 
+    split = path.split('/')
+
     # Filter for paths that contain jobs
-    if 'job' not in path:
-        continue
-    if datadirname in path:
-        continue
-    if plotdirname in path:
-        continue
-    if 'minimization' in path:
+    if 'job' not in split[-1]:
         continue
 
     run = job(path, datadirname, plotdirname)
@@ -43,7 +37,7 @@ for item in os.walk(sys.argv[1]):
     run.box(trajdotlammpstrj)
 
     temps = dfcool['Temp'].values
-    min_t = temps[-6]  # Minimum number of point for spline to work
+    min_t = temps[-6]  # Minimum number of points for spline to work
     max_t = max(temps)
 
     range_t = np.linspace(min_t, max_t, 100)
@@ -76,9 +70,9 @@ for item in os.walk(sys.argv[1]):
     tcut = click[-1][0]
 
     ax.axvline(
-               tcut, 
-               linestyle=':', 
-               color='k', 
+               tcut,
+               linestyle=':',
+               color='k',
                label='Upper Temperature Cutoff: '+str(tcut)+' [K]'
                )
 

@@ -52,7 +52,6 @@ for item in os.walk(sys.argv[1]):
     else:
         etgcut = np.nan
 
-
     row = names+[etg, etgcut]
 
     dftg.loc[count] = row  # Append a row to the dataframe

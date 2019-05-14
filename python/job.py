@@ -1,15 +1,18 @@
 from PyQt5 import QtGui  # Added to be able to import ovito
 
-from scipy.interpolate import UnivariateSpline as interpolate
+from scipy.interpolate import UnivariateSpline
 from scipy.optimize import curve_fit
 
 from matplotlib import pyplot as pl
+
 from scipy.signal import argrelextrema
+import scipy as sc
 
 import pymatgen as mg
 import pandas as pd
-import scipy as sc
 import numpy as np
+
+import os
 
 from ovito.modifiers import VoronoiAnalysisModifier
 from ovito.io import import_file
@@ -20,8 +23,6 @@ import traj
 import test
 import dep
 
-import os
-
 
 def volume_sphere(r):
     '''
@@ -29,14 +30,6 @@ def volume_sphere(r):
     '''
 
     return 4.0/3.0*sc.pi*r**3.0
-
-
-def sigmoid(x, a, b):
-    '''
-    A sigmoid function
-    '''
-
-    return 1.0/(1.0+np.exp(-a*(x-b)))
 
 
 class job:
@@ -274,14 +267,14 @@ class job:
 
         k = 5
         s = 1
-        spl = interpolate(x=x, y=y, k=k, s=s)
+        spl = UnivariateSpline(x=x, y=y, k=k, s=s)
         xfit = np.linspace(np.min(x), np.max(x), 100)
         yfit = spl(xfit)
 
         if plot:
 
             fig, ax = pl.subplots()
-            
+
             ax.plot(x, y, marker='.', linestyle='none', label='data')
             ax.plot(
                     xfit,
@@ -353,7 +346,7 @@ class job:
         xcut = x[condition]
         ycut = y[condition]
 
-        spl = interpolate(x=xcut, y=ycut, k=k, s=s)
+        spl = UnivariateSpline(x=xcut, y=ycut, k=k, s=s)
         xfitcut = np.linspace(xcut[0], xcut[-1], 100)
         yfitcut = spl(xfitcut)
 
@@ -370,7 +363,6 @@ class job:
             write_name = os.path.join(self.datapath, 'tg_e_t_cutoff.txt')
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(max_temp))
-
 
         if plot:
 
@@ -392,7 +384,6 @@ class job:
                           label='cutoff = '+str(max_temp)+' [K]'
                           )
 
-
             ax[0].set_ylabel('E-3kT [K/atom]')
             ax[0].grid()
             ax[0].legend()
@@ -410,16 +401,16 @@ class job:
                        xfitcut,
                        yfitcut,
                        linestyle='-',
-                       label='Cut Univariate Spline (k='+str(k)+', s='+str(s)+')'
+                       label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
                        )
-                
+
             ax[1].axvline(
                           tg,
                           linestyle='--',
                           color='r',
                           label='Tg = '+str(tg)+' [K]'
                           )
-            
+
             ax[1].grid()
             ax[1].legend()
 
@@ -442,7 +433,6 @@ class job:
                        color='r',
                        label='Tg = '+str(tg)+' [K]'
                        )
-
 
             ax.set_xlabel('End Temperature [K]')
             ax.set_ylabel('RMSE')
@@ -529,7 +519,6 @@ class job:
             write_name = os.path.join(self.datapath, 'atp_single.txt')
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(apd_last))
-
 
         return apd_last
 

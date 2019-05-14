@@ -1,4 +1,22 @@
 #!/bin/bash
 
-# Accepts the directory with all of the runs as the argument
-python3 python/tg_iterator.py '../'
+# Calcullate Tg for each run
+# Inputs:
+#	<directory containing all jobs>
+#	<generic name for jobs>
+#	<name of directory containing analysis data>
+#       <name of directory containing analysis plots>
+#       <name of directory containing minimization >
+#	<name of trajectory file>
+#	<name of LAMMPS print to screen file>
+#	<name of input file>
+
+python3\
+	python/tg_iterator.py \
+	'../'\
+	'job'\
+       	'analysis_data'\
+       	'analysis_plots'\
+       	'traj.lammpstrj'\
+       	'test.out'\
+       	'dep.in'
