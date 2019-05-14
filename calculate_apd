@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Calculate Tg for each run
+# Calculate APD for each run
 # Inputs:
 #	<directory containing all jobs>
 #	<generic name for jobs>
@@ -12,12 +12,11 @@
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
 
-python3 python/tg_iterator.py\
+python3 python/apd_iterator.py\
 	'../data'\
-	'job'\
+	'100K_Structure_minimization'\
+        'finaltraj.lammpstrj'\
+        '100k_minimize_template.in'\
 	'../export'\
        	'analysis_data'\
-       	'analysis_plots'\
-       	'traj.lammpstrj'\
-       	'test.out'\
-       	'dep.in'
+	'analysis_plots'

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Calculate mean APD from gathered APD values
+# Inputs:
+#       <path to APD dataframe>
+#	<export directory>
+
+python3 python/calculate_mean_apd.py\
+       	'../export/analysis_data/apd_df.txt'\
+	'../export/analysis_data'

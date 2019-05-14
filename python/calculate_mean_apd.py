@@ -1,5 +1,5 @@
 '''
-Construct Tg dataframe of mean values.
+Construct APD dataframe of mean values.
 '''
 
 import pandas as pd

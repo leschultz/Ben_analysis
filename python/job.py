@@ -422,7 +422,7 @@ class job:
 
         return tg
 
-    def apd_single(self, traj_path, in_path, write=True):
+    def apd_last(self, traj_path, in_path, write=True):
         '''
         Calculate the APD from the last trajectories.
 
@@ -490,10 +490,10 @@ class job:
 
         apd_last = df['apd'].values[-1]
 
+        print(self.datapath)
         if write:
 
-            # Export the glass transition temperature
-            write_name = os.path.join(self.datapath, 'atp_single.txt')
+            write_name = os.path.join(self.datapath, 'apd_last.txt')
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(apd_last))
 
