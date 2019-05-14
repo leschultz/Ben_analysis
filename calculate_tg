@@ -12,7 +12,7 @@
 #	<name of input file>
 
 python3\
-	python/tg_iterator.py \
+	python/tg_iterator.py\
 	'../'\
 	'job'\
        	'analysis_data'\

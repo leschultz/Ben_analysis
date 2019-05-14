@@ -1,23 +1,16 @@
-#!/usr/bin/python3
+#!/bin/bash
 
-'''
-Delete recursively folders and contents matching a list input.
-'''
+# Delete recursively folders and contents matching a list input.
+# Inputs:
+#       <directory containing all jobs>
+#       <generic name of directory to be removed 1>
+#       <generic name of directory to be removed 2>
+#	...
+#       <generic name of directory to be removed n>
 
-import shutil
-import sys
-import os
-
-# Delete folders
-remove_list = ['analysis_data', 'analysis_plots', 'analysis_scripts']
-
-data_path = sys.argv[1]  # The path where data are located
-
-# For all possible directories
-for item in os.walk(data_path):
-
-    path = item[0]  # The path
-    for r in remove_list:  # Loop for folders to delete
-        if r in path:  # Check if delete folder is in path
-            shutil.rmtree(path)  # Remove folder and contents
-            print('Removing: '+path)
+python3\
+	python/remove_calculations.py\
+	'../data'\
+	'analysis_scripts'\
+	'analysis_plots'\
+	'analysis_data'\
