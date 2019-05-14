@@ -14,7 +14,6 @@ trajdotlammpstrj = sys.argv[3]  # Trajectories
 depdotin = sys.argv[4]  # Input file
 export_dir = sys.argv[5]  # The export directory
 datadirname = sys.argv[6]  # Name of data directory
-plotdirname = sys.argv[7]  # Name of plot directory
 
 # Loop for each path
 for item in os.walk(jobs_dir):
@@ -27,7 +26,7 @@ for item in os.walk(jobs_dir):
     if datadir_name not in split[-1]:
         continue
 
-    run = job(path, export_dir, datadirname, plotdirname)
+    run = job(path, export_dir, datadirname)
 
     traj = os.path.join(path, trajdotlammpstrj)
     dep = os.path.join(path, depdotin)

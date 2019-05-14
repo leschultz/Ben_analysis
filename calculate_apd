@@ -3,14 +3,11 @@
 # Calculate APD for each run
 # Inputs:
 #	<directory containing all jobs>
-#	<generic name for jobs>
+#	<generic directory containing data files>
+#       <name of trajectory file>
+#       <name of input file>
 #	<export directory for analysis>
 #	<name of directory containing analysis data>
-#       <name of directory containing analysis plots>
-#       <name of directory containing minimization >
-#	<name of trajectory file>
-#	<name of LAMMPS print to screen file>
-#	<name of input file>
 
 python3 python/apd_iterator.py\
 	'../data'\
@@ -18,5 +15,4 @@ python3 python/apd_iterator.py\
         'finaltraj.lammpstrj'\
         '100k_minimize_template.in'\
 	'../export'\
-       	'analysis_data'\
-	'analysis_plots'
+       	'analysis_data'

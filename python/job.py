@@ -37,7 +37,7 @@ class job:
     Setup all the data per job for analysis.
     '''
 
-    def __init__(self, path, export, data_path, plot_path):
+    def __init__(self, path, export, data_path=False, plot_path=False):
         '''
         Create all the paths needed to save analysis data.
 
@@ -54,15 +54,16 @@ class job:
 
         # Save paths
         export_path = os.path.join(export, path.strip('../'))
-        self.datapath = os.path.join(export_path, data_path)
-        self.plotpath = os.path.join(export_path, plot_path)
 
-        # Create a directory for the analysis files
-        if not os.path.exists(self.datapath):
-            os.makedirs(self.datapath)
+        if data_path:
+            self.datapath = os.path.join(export_path, data_path)
+            if not os.path.exists(self.datapath):
+                os.makedirs(self.datapath)
 
-        if not os.path.exists(self.plotpath):
-            os.makedirs(self.plotpath)
+        if plot_path:
+            self.plotpath = os.path.join(export_path, plot_path)
+            if not os.path.exists(self.plotpath):
+                os.makedirs(self.plotpath)
 
         print('Analysis for: '+path)
 
