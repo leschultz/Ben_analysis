@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# Usage: python3 average_tg/make_tg_df.py <jobs containing tg information>
-
-python3 python/make_tg_df.py "../"

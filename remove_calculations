@@ -8,8 +8,7 @@
 #	...
 #       <generic name of directory to be removed n>
 
-python3\
-	python/remove_calculations.py\
+python3	python/remove_calculations.py\
 	'../data'\
 	'analysis_scripts'\
 	'analysis_plots'\

@@ -12,8 +12,7 @@
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
 
-python3\
-	python/tg_iterator.py\
+python3 python/tg_iterator.py\
 	'../data'\
 	'job'\
 	'../export'\

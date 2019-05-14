@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Gather Tg values from analysis
+# Inputs:
+#       <analysis data from jobs>
+#	<name of file containing Tg>
+#	<name of the file containing cutoff temperature for Tg>
+#       <export directory>
+
+python3 python/gather_tg.py\
+       	'../export'\
+       	'tg_e.txt'\
+	'tg_e_t_cutoff.txt'\
+       	'../export/analysis_data'
