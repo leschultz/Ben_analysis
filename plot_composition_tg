@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Plot Tg of for binary compositions from mean Tg dataframe
+# Inputs:
+#	<change in temperature>
+#	<timestep>
+#       <path to mean Tg dataframe>
+#	<export directory>
+
+python3 python/plot_composition_tg.py\
+	'50'\
+	'0.001'\
+        '../export/analysis_data/tg_mean_df.txt'\
+	'../export/analysis_plots/'
