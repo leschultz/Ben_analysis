@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 from scipy.interpolate import UnivariateSpline as interpolate
 from matplotlib import pyplot as pl
 
@@ -11,6 +9,17 @@ import os
 
 
 def rmse(act, pred):
+    '''
+    Calculate the root mean squared error (RMSE).
+
+    inputs:
+        act = The actual values
+        pred = The predicted values
+
+    outputs:
+        e = The RMSE
+    '''
+
     act = np.array(act)
     pred = np.array(pred)
 
@@ -21,57 +30,74 @@ def rmse(act, pred):
     return e
 
 
-def opt(x, y, tol=0.1):
+def opt(x, y):
     '''
+    Linearely fit data from both ends of supplied data and calculate RMSE.
+
+    Left fit:
+        Start at a pivot (x[0]) and then fit multiple lines from x[n] until
+        x[1]. Calculate RMSE for each fit.
+
+    Right fit:
+        Start at a pivot (x[n]) and then fit multiple lines from x[0] until
+        x[n-1]. Calculate RMSE for each fit.
+
+    After the fits are completed, their errors are averaged for each
+    x point included in a fit excluding the pivots.
+
+    The minimum averaged RMSE is considered to be the optimal point for
+    fitting two lines.
+
+    inputs:
+        x = Horizontal axis data
+        y = Vertical axis data
+
+    outputs:
+        xcut = The chosen x point
+        endpoints = The non-pivot x values
+        middlermse = The average RMSE
     '''
 
+    # Make data into numpy arrays
     x = np.array(x)
     y = np.array(y)
 
-    left_rmse = []
-    right_rmse = []
+    n = len(x)  # The length of data
 
-    n = len(x)
-    indexes = list(range(n-1))
-    ldata = []
-    rdata = []
-    for i in indexes:
+    ldata = []  # Left fits non-pivot and RMSE
+    rdata = []  # Right fits non-pivot and RMSE
+
+    for i in list(range(n-1)):
+
+        # Left fit
         xl = x[:n-i]
-        xr = x[i:]
-
         yl = y[:n-i]
-        yr = y[i:]
 
         ml, il, _, _, _ = linregress(xl, yl)
-        mr, ir, _, _, _ = linregress(xr, yr)
-
         yfitl = ml*xl+il
+        rmsel = rmse(yl, yfitl)  # Left RMSE
+
+        # Right fit
+        xr = x[i:]
+        yr = y[i:]
+
+        mr, ir, _, _, _ = linregress(xr, yr)
         yfitr = mr*xr+ir
+        rmser = rmse(yr, yfitr)  # Right RMSE
 
-        rmsel = rmse(yl, yfitl)
-        rmser = rmse(yr, yfitr)
-
+        # Exclude pivot points from data
         if i > 0:
             ldata.append((xl[-1], rmsel))
             rdata.append((xr[0], rmser))
 
-        left_rmse.append(rmsel)
-        right_rmse.append(rmser)
-
-    left_rmse = np.array(left_rmse)
-    right_rmse = np.array(right_rmse)
-
+    # Align data based on pivot point
     ldata = np.array(ldata)
     rdata = np.array(rdata[::-1])
 
-    middle_rmse = (ldata[:, 1]+rdata[:, 1])/2
-    mcut = np.argmin(middle_rmse)
+    middle_rmse = (ldata[:, 1]+rdata[:, 1])/2  # Mean RMSE
+    mcut = np.argmin(middle_rmse)  # Minimum RMSE index
+    xcut = ldata[mcut, 0]  # x data with minimum RMSE
 
-    lcut = np.argmax(left_rmse <= tol*left_rmse.max())
-    rcut = np.argmax(right_rmse <= tol*right_rmse.max())
-    xcut = ldata[mcut, 0]
+    endpoints = ldata[:, 0]  # Non-pivot points for fits
 
-    left = x[n-lcut]
-    right = x[rcut]
-
-    return xcut, left, right, ldata, rdata, middle_rmse
+    return xcut, endpoints, middle_rmse

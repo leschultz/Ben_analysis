@@ -11,13 +11,14 @@ import os
 jobs_dir = sys.argv[1]  # The job directories
 jobs_name = sys.argv[2]  # The generic job name
 
-datadirname = sys.argv[3]  # Name of data directory
-plotdirname = sys.argv[4]  # Name of plot directory
+export_dir = sys.argv[3]  # The export directory
 
-# The name of important files for each job
-trajdotlammpstrj = sys.argv[5]  # Trajectories
-testdotout = sys.argv[6]  # LAMMPS print to screen
-depdotin = sys.argv[7]  # Input file
+datadirname = sys.argv[4]  # Name of data directory
+plotdirname = sys.argv[5]  # Name of plot directory
+
+trajdotlammpstrj = sys.argv[6]  # Trajectories
+testdotout = sys.argv[7]  # LAMMPS print to screen
+depdotin = sys.argv[8]  # Input file
 
 # Loop for each path
 for item in os.walk(jobs_dir):
@@ -27,10 +28,10 @@ for item in os.walk(jobs_dir):
     split = path.split('/')
 
     # Filter for paths that contain jobs
-    if 'job' not in split[-1]:
+    if jobs_name not in split[-1]:
         continue
 
-    run = job(path, datadirname, plotdirname)
+    run = job(path, export_dir, datadirname, plotdirname)
 
     run.input_file(depdotin)
     dfcool = run.sys(testdotout)
@@ -64,7 +65,7 @@ for item in os.walk(jobs_dir):
     mng = pl.get_current_fig_manager()
     mng.full_screen_toggle()
 
-    plot_path = os.path.join(path, plotdirname)
+    plot_path = os.path.join(*[export_dir, path.strip('../'), plotdirname])
 
     click = fig.ginput(n=-1, mouse_add=1, mouse_pop=3)
     tcut = click[-1][0]
@@ -78,7 +79,7 @@ for item in os.walk(jobs_dir):
 
     ax.legend(loc='upper center')
 
-    fig.savefig(os.path.join(plot_path, 'tg_upper_t_cutoff'))
+    fig.savefig(os.path.join(plot_path, 'tg_upper_temp_cutoff'))
 
     pl.close('all')
 

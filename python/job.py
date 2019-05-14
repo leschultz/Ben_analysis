@@ -37,17 +37,25 @@ class job:
     Setup all the data per job for analysis.
     '''
 
-    def __init__(self, path, data_path, plot_path):
+    def __init__(self, path, export, data_path, plot_path):
         '''
         Create all the paths needed to save analysis data.
+
+        inputs:
+            self = The object reference
+            path = The path to the data
+            export = The path to export analysis
+            data_path = The name of the folder to save analysis data
+            plot_path = The name off the folder to save analysis plots
         '''
 
         # The location of the job
         self.path = path
 
         # Save paths
-        self.datapath = os.path.join(self.path, data_path)
-        self.plotpath = os.path.join(self.path, plot_path)
+        export_path = os.path.join(export, path.strip('../'))
+        self.datapath = os.path.join(export_path, data_path)
+        self.plotpath = os.path.join(export_path, plot_path)
 
         # Create a directory for the analysis files
         if not os.path.exists(self.datapath):
@@ -350,7 +358,7 @@ class job:
         xfitcut = np.linspace(xcut[0], xcut[-1], 100)
         yfitcut = spl(xfitcut)
 
-        tg, left, right, ldata, rdata, middle_rmse = opt(xfitcut, yfitcut)
+        tg, endpoints, middle_rmse = opt(xfitcut, yfitcut)
 
         if write:
 
@@ -423,9 +431,7 @@ class job:
 
             fig, ax = pl.subplots()
 
-            ax.plot(ldata[:, 0], ldata[:, 1], label='left fits')
-            ax.plot(rdata[:, 0], rdata[:, 1], label='right fits')
-            ax.plot(ldata[:, 0], middle_rmse, label='left and right fits')
+            ax.plot(endpoints, middle_rmse, label='Mean RMSE')
 
             ax.axvline(
                        tg,

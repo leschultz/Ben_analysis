@@ -4,6 +4,7 @@
 # Inputs:
 #	<directory containing all jobs>
 #	<generic name for jobs>
+#	<export directory for analysis>
 #	<name of directory containing analysis data>
 #       <name of directory containing analysis plots>
 #       <name of directory containing minimization >
@@ -13,8 +14,9 @@
 
 python3\
 	python/tg_iterator.py\
-	'../'\
+	'../data'\
 	'job'\
+	'../export'\
        	'analysis_data'\
        	'analysis_plots'\
        	'traj.lammpstrj'\
