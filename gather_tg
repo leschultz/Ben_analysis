@@ -9,6 +9,6 @@
 
 python3 python/gather_tg.py\
        	'../export'\
-       	'tg_e.txt'\
-	'tg_e_t_cutoff.txt'\
+       	'etg.txt'\
+	'etg_temp_cutoff.txt'\
        	'../export/analysis_data'

@@ -173,41 +173,6 @@ class job:
 
         dfelprops = pd.DataFrame(elements).T
 
-    def volume(self):
-        '''
-        Calculate the volume from box dimensions.
-
-        inputs:
-            self = The object reference
-
-        outputs:
-            dfvol = The volumes for trajectory snapshots
-        '''
-
-        print('Calculating volume')
-
-        try:
-            self.file_trajs
-
-        except Exception:
-            message = 'Need to specify trajectory file.'
-            raise ValueError(message)
-
-        df = pd.DataFrame()
-
-        # Find the box lengths
-        df['dx'] = self.dftraj['xhi']-self.dftraj['xlo']  # Am
-        df['dy'] = self.dftraj['yhi']-self.dftraj['ylo']  # Am
-        df['dz'] = self.dftraj['zhi']-self.dftraj['zlo']  # Am
-
-        dfvol = pd.DataFrame()
-
-        # Find the box volume
-        dfvol['time'] = self.dftraj['time']
-        dfvol['Volume'] = df['dx']*df['dy']*df['dz']  # Am^3
-
-        return dfvol
-
     def find_tl(
                 self,
                 edges=5,
@@ -302,7 +267,13 @@ class job:
             fig.tight_layout()
             pl.show()
 
-    def etg(self, max_temp=1000, write=True, plot=True, verbose=True):
+    def etg(
+            self,
+            max_temp=1000,
+            write=True,
+            plot=True,
+            verbose=True
+            ):
         '''
         Calculate the glass transition temperature based on E-3kt.
 
@@ -363,12 +334,12 @@ class job:
         if write:
 
             # Export the glass transition temperature
-            write_name = os.path.join(self.datapath, 'tg_e.txt')
+            write_name = os.path.join(self.datapath, 'etg.txt')
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(tg))
 
             # Export the upper temperature cutoff
-            write_name = os.path.join(self.datapath, 'tg_e_t_cutoff.txt')
+            write_name = os.path.join(self.datapath, 'etg_temp_cutoff.txt')
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(max_temp))
 
@@ -426,7 +397,7 @@ class job:
             ax[1].set_ylabel('E-3kT [K/atom]')
 
             fig.set_size_inches(15, 10, forward=True)
-            fig.savefig(os.path.join(self.plotpath, 'etg'))
+            fig.savefig(os.path.join(self.plotpath, 'etg.png'))
             pl.close('all')
 
             fig, ax = pl.subplots()
@@ -446,7 +417,7 @@ class job:
             ax.legend()
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'etg_rmse'))
+            fig.savefig(os.path.join(self.plotpath, 'etg_rmse.png'))
             pl.close('all')
 
         return tg
