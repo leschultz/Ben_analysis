@@ -79,7 +79,7 @@ for item in os.walk(jobs_dir):
 
     ax.legend(loc='upper center')
 
-    fig.savefig(os.path.join(plot_path, 'tg_upper_temp_cutoff'))
+    fig.savefig(os.path.join(plot_path, 'tg_upper_t_cutoff'))
 
     pl.close('all')
 
