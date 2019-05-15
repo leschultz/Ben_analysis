@@ -173,7 +173,7 @@ calculate_mean_tg
 calculate_mean_apd
 plot_composition_tg
 ```
-Each of the commands calculates a different set of data. All data is stored in a directory called export.
+Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool usage.
 
 ## Authors
 
