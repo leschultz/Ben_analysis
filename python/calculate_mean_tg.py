@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''
 Construct Tg dataframe of mean values.
 '''

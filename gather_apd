@@ -6,7 +6,7 @@
 #	<name of file containing APD>
 #       <export directory>
 
-python3 python/gather_apd.py\
+gather_apd.py\
        	'../export'\
        	'apd_last.txt'\
        	'../export/analysis_data'

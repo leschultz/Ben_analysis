@@ -5,6 +5,6 @@
 #       <path to Tg dataframe>
 #	<export directory>
 
-python3 python/calculate_mean_tg.py\
+calculate_mean_tg.py\
        	'../export/analysis_data/tg_df.txt'\
 	'../export/analysis_data'

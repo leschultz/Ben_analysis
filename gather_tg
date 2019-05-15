@@ -7,7 +7,7 @@
 #	<name of the file containing cutoff temperature for Tg>
 #       <export directory>
 
-python3 python/gather_tg.py\
+gather_tg.py\
        	'../export'\
        	'etg.txt'\
 	'etg_temp_cutoff.txt'\

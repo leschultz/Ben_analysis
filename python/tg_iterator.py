@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from scipy.signal import argrelextrema
 from matplotlib import pyplot as pl
 

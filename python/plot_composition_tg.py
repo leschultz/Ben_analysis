@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from matplotlib import pyplot as pl
 
 import pandas as pd

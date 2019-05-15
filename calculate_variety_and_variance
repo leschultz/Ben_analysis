@@ -11,7 +11,7 @@
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
 
-python3 python/variance_and_variety_iterator.py\
+variance_and_variety_iterator.py\
 	'../data'\
 	'job'\
 	'../export'\

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''
 Construct APD dataframe of mean values.
 '''
@@ -27,5 +29,5 @@ count = groups.count().add_suffix('_count').reset_index()
 df = mean.merge(sem)
 df = df.merge(count)
 
-df.to_csv(os.path.join(export_dir, 'tg_mean_df.txt'), index=False)
-df.to_html(os.path.join(export_dir, 'tg_mean_df.html'), index=False)
+df.to_csv(os.path.join(export_dir, 'apd_mean_df.txt'), index=False)
+df.to_html(os.path.join(export_dir, 'apd_mean_df.html'), index=False)

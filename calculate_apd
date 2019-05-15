@@ -9,7 +9,7 @@
 #	<export directory for analysis>
 #	<name of directory containing analysis data>
 
-python3 python/apd_iterator.py\
+apd_iterator.py\
 	'../data'\
 	'100K_Structure_minimization'\
         'finaltraj.lammpstrj'\

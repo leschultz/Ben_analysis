@@ -7,7 +7,7 @@
 #       <path to mean Tg dataframe>
 #	<export directory>
 
-python3 python/plot_composition_tg.py\
+plot_composition_tg.py\
 	'50'\
 	'0.001'\
         '../export/analysis_data/tg_mean_df.txt'\
