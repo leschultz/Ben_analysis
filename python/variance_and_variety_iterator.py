@@ -29,7 +29,6 @@ for item in os.walk(jobs_dir):
     if job_name not in split[-1]:
         continue
 
-    print(path)
     run = job(path, export_dir, datadirname, plotdirname)
 
     run.input_file(depdotin)

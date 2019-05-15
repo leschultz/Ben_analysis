@@ -423,7 +423,7 @@ class job:
 
         return tg
 
-    def apd_last(self, traj_path, in_path, write=True):
+    def apd_last(self, traj_path, in_path, write=True, verbose=True):
         '''
         Calculate the APD from the last trajectories.
 
@@ -436,7 +436,8 @@ class job:
             apd_last = The APD for the last trajectory snapsot
         '''
 
-        print('Calculating APD from: '+traj_path)
+        if verbose:
+            print('Calculating APD from: '+traj_path)
 
         df, counts = traj.info(traj_path)
 
@@ -504,7 +505,9 @@ class job:
            self,
            threshold=0.1,
            write=True,
-           plot=True
+           plot=True,
+           first=10,
+           verbose=True
            ):
         '''
         Do the cluster analysis for n_5 >= 10 Voronoi polyhedra (VP).
@@ -519,9 +522,11 @@ class job:
             dfv = A dataframe containing VP variance and variety
         '''
 
-        print(
-              'Calculating VP variety and variance at highest temperature hold'
-              )
+        if verbose:
+            print(
+                  'Calculating VP variety and '+
+                  'variance at highest temperature hold'
+                  )
 
         try:
             self.file_trajs
@@ -566,47 +571,62 @@ class job:
 
         node.modifiers.append(voro)
 
-        variety = []
-        variance = []
+        all_indexes = []
         for frame in df['frame']:
             out = node.compute(frame)
             indexes = out.particle_properties['Voronoi Index'].array
-            coords, counts = np.unique(indexes, axis=0, return_counts=True)
+            all_indexes.append(indexes)
 
-            dfvp = pd.DataFrame()
-            dfvp['VP'] = [tuple(i) for i in coords]
-            dfvp['Step'] = int(df['Step'][df['frame'] == frame])
-            dfvp['frame'] = int(df['frame'][df['frame'] == frame])
-            dfvp['time'] = float(df['time'][df['frame'] == frame])
-            dfvp['counts'] = counts
-            dfvp['fracs'] = counts/len(indexes)
-            dfvp['time'] = float(df['time'][df['frame'] == frame])
+        # Combine all the frames
+        all_indexes = [pd.DataFrame(i) for i in all_indexes]
+        df = pd.concat(all_indexes)
+        df = df.fillna(0)  # Make cure indexes are zero if not included
+        df = df.astype(int)  # Make sure all counts are integers
 
-            dfvp = dfvp.sort_values(by=['fracs'], ascending=False)
+        # Count the number of unique VP
+        coords, counts = np.unique(df.values, axis=0, return_counts=True)
 
-            variances = []
-            for i in range(1, len(counts)+1):
-                top = dfvp['fracs'].values
-                top = top[:i]
+        # Standard notation
+        coords = coords[:, 2:]
+        coords = np.array([tuple(np.trim_zeros(i)) for i in coords])
 
-                variances.append(np.var(top))
+        # Sort counts and indexes by descending order
+        indexes = counts.argsort()[::-1]
+        coords = coords[indexes]
+        counts = counts[indexes]
 
-            variances = np.array(variances)
-            variety.append(len(dfvp)/len(indexes))
-            variance.append(variances.max())
+        total = sum(counts)  # The total number of atoms for all frames
 
-        dfv = pd.DataFrame()
-        dfv['Step'] = df['Step']
-        dfv['time'] = df['time']
-        dfv['variety'] = variety
-        dfv['max variance'] = variance
+        # Gather fraction values
+        fractions = counts/total 
+
+        # The average number of types of VP seen over all atoms from all frames
+        variety = counts.shape[0]/total
+
+        # Calculate variance from list including ordered fractions of VP
+        variance = []
+        for i in range(1, counts.shape[0]):
+            variance.append(np.var(fractions[:i]))
+
+        variance = np.array(variance)  # Numpy array
+
+        max_index = np.argmax(variance)
+        max_variance = variance[max_index]
+        max_number = max_index+1
 
         # Create a directory for the analysis files
         if write:
-            dfv.to_csv(
-                       os.path.join(self.datapath, 'top_vp_fractions.txt'),
-                       index=False
+
+            # Export all variances calculated
+            np.savetxt(
+                       os.path.join(self.datapath, 'variance.txt'),
+                       variance,
                        )
+
+            # Export the variety calculated
+            write_name = os.path.join(self.datapath, 'variety.txt')
+            with open(write_name, 'w+') as outfile:
+                outfile.write(str(variety))
 
         if plot:
 
@@ -614,40 +634,46 @@ class job:
             fig, ax = pl.subplots()
 
             ax.plot(
-                    dfv['time'],
-                    dfv['max variance'],
+                    np.arange(1, len(variance)+1),
+                    variance,
                     marker='.',
-                    linestyle='none'
+                    linestyle='none',
+                    label='Varience Data'
                     )
+
+            max_label = 'Maximum variance: '+str((max_number, max_variance))
+            ax.axvline(
+                       max_variance,
+                       linestyle=':',
+                       color='r',
+                       label=max_label
+                       )
 
             ax.set_ylabel('Maximum Variance of VP [-]')
-            ax.set_xlabel('Time [ps]')
+            ax.set_xlabel('Number of VP Types [-]')
+
             ax.grid()
             ax.legend()
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'fracs_variance'))
+            fig.savefig(os.path.join(self.plotpath, 'variance.png'))
 
             pl.close('all')
 
-            # Plot variety
+            # Plot distribution of cluster types seen
             fig, ax = pl.subplots()
 
-            ax.plot(
-                    dfv['time'],
-                    dfv['variety'],
-                    marker='.',
-                    linestyle='none'
-                    )
+            x = [str(i) for i in coords[:first]][::-1]
+            y = fractions[:first][::-1]
 
-            ax.set_ylabel('Variety of VP [-]')
-            ax.set_xlabel('Time [ps]')
-            ax.grid()
-            ax.legend()
+            ax.barh(x, y)
+
+            ax.set_xlabel('Fraction of VP [-]')
+            ax.set_ylabel('The '+str(first)+' Most Frequent VP [-]')
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'fracs_variety'))
+            fig.savefig(os.path.join(self.plotpath, 'variety.png'))
 
             pl.close('all')
 
-        return dfv
+        return max_number, max_variance, variety
