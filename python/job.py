@@ -524,7 +524,7 @@ class job:
 
         if verbose:
             print(
-                  'Calculating VP variety and '+
+                  'Calculating VP variety and ' +
                   'variance at highest temperature hold'
                   )
 
@@ -600,7 +600,7 @@ class job:
         total = sum(counts)  # The total number of atoms for all frames
 
         # Gather fraction values
-        fractions = counts/total 
+        fractions = counts/total
 
         # The average number of types of VP seen over all atoms from all frames
         variety = counts.shape[0]/total
