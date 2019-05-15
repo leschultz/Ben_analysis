@@ -44,7 +44,7 @@ for i in group:
                 marker='.',
                 ecolor='r',
                 linestyle='none',
-                label='Cooling Rate: '+"{:.2E}".format(rate)+' [K/s]'
+                label='Cooling Rate: '+'{:.2E}'.format(rate)+' [K/s]'
                 )
 
     ax.set_xlabel('Fraction of '+elements[1]+' in '+elements[0])

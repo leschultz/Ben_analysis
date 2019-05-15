@@ -572,10 +572,12 @@ class job:
         node.modifiers.append(voro)
 
         all_indexes = []
+        frames = 0
         for frame in df['frame']:
             out = node.compute(frame)
             indexes = out.particle_properties['Voronoi Index'].array
             all_indexes.append(indexes)
+            frames += 1
 
         # Combine all the frames
         all_indexes = [pd.DataFrame(i) for i in all_indexes]
@@ -638,18 +640,18 @@ class job:
                     variance,
                     marker='.',
                     linestyle='none',
-                    label='Varience Data'
+                    label='Data for '+str(frames)+' frames'
                     )
 
             max_label = 'Maximum variance: '+str((max_number, max_variance))
             ax.axvline(
-                       max_variance,
+                       max_number,
                        linestyle=':',
                        color='r',
                        label=max_label
                        )
 
-            ax.set_ylabel('Maximum Variance of VP [-]')
+            ax.set_ylabel('Variance of VP [-]')
             ax.set_xlabel('Number of VP Types [-]')
 
             ax.grid()
