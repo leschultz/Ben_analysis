@@ -180,6 +180,7 @@ class job:
                 faces=10,
                 lim=0.1,
                 threshold=0.1,
+                min_temp=800,
                 write=True,
                 plot=True
                 ):
@@ -239,7 +240,18 @@ class job:
         x = df['Temp'].values
         y = df['fractions'].values
 
-        tl, endpoints, middle_rmse = opt(x, y)
+        # Cutoff region
+        cut = x >= min_temp
+        xcut = x[cut]
+        ycut = y[cut]
+
+        # Spline fit of cut region
+        k, s = (5, 1)
+        spl = UnivariateSpline(x=xcut, y=ycut, k=k, s=s)
+        xfitcut = np.linspace(xcut[0], xcut[-1], 100)
+        yfitcut = spl(xfitcut)
+
+        tl, endpoints, middle_rmse = opt(xfitcut, yfitcut)
 
         if plot:
 
@@ -248,10 +260,23 @@ class job:
             ax.plot(x, y, marker='.', linestyle='none', label='data')
             ax.axvline(
                        tl,
-                       color='k',
+                       color='r',
                        linestyle=':',
                        label='Tl='+str(tl)+' [K]'
                        )
+
+            ax.axvline(
+                       min_temp,
+                       color='k',
+                       label='cutoff = '+str(min_temp)+' [K]'
+                       )
+
+            ax.plot(
+                    xfitcut,
+                    yfitcut,
+                    linestyle='-',
+                    label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
+                    )
 
             xlabel = 'Temperature [K]'
             ylabel = r'Fractions of $n_{'+str(edges+1)+'} >= '+str(faces)+'$'
@@ -318,12 +343,13 @@ class job:
         x = dfcool['Temp'].values
         y = dfcool['E-3kT'].values
 
-        # Spline fit of cut region
-        k, s = (5, 1)
+        # Cutoff region
         condition = x <= max_temp
         xcut = x[condition]
         ycut = y[condition]
 
+        # Spline fit of cut region
+        k, s = (5, 1)
         spl = UnivariateSpline(x=xcut, y=ycut, k=k, s=s)
         xfitcut = np.linspace(xcut[0], xcut[-1], 100)
         yfitcut = spl(xfitcut)
