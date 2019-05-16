@@ -150,7 +150,7 @@ If on a linux machine, include the following to either a .bashrc or .zshrc file 
 ```
 # Path to analysis_scripts
 export PATH="/home/nerve/Tools/analysis_scripts":$PATH
-export PATH="/home/nerve/Tools/analysis_scripts/python":$PATH
+export PATH="/home/nerve/Tools/analysis_scripts/python_rc":$PATH
 ```
 
 The wrapper for OVITO is needed aswell. Make sure to include OVITO's python scripts in $PYTHONPATH.
@@ -173,7 +173,8 @@ calculate_mean_tg
 calculate_mean_apd
 plot_composition_tg
 ```
-Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool usage.
+
+Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool use. The order listed ensure functionality because some scripts need data produced from other scripts to function.
 
 ## Authors
 
