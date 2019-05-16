@@ -239,23 +239,19 @@ class job:
         x = df['Temp'].values
         y = df['fractions'].values
 
-        k = 5
-        s = 1
-        spl = UnivariateSpline(x=x, y=y, k=k, s=s)
-        xfit = np.linspace(np.min(x), np.max(x), 100)
-        yfit = spl(xfit)
+        tl, endpoints, middle_rmse = opt(x, y)
 
         if plot:
 
             fig, ax = pl.subplots()
 
             ax.plot(x, y, marker='.', linestyle='none', label='data')
-            ax.plot(
-                    xfit,
-                    yfit,
-                    color='g',
-                    label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
-                    )
+            ax.axvline(
+                       tl,
+                       color='k',
+                       linestyle=':',
+                       label='Tl='+str(tl)+' [K]'
+                       )
 
             xlabel = 'Temperature [K]'
             ylabel = r'Fractions of $n_{'+str(edges+1)+'} >= '+str(faces)+'$'
@@ -267,6 +263,8 @@ class job:
 
             fig.tight_layout()
             pl.show()
+
+        return tl
 
     def etg(
             self,
@@ -516,10 +514,12 @@ class job:
             self = The object reference
             threshold = The maximum length for a VP edge
             write = Whether or not to save the fractions and temperatures
-            saveplot = Whether or not to plot the fractions and temperatures
+            plot = Whether or not to plot the fractions and temperatures
 
         outputs:
-            dfv = A dataframe containing VP variance and variety
+            max_number = The number of VP types considered for maximum variance
+            max_variance = The maximum variance
+            variety =  The variety of clusters
         '''
 
         if verbose:
