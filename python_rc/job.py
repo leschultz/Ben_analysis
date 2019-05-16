@@ -182,7 +182,8 @@ class job:
                 threshold=0.1,
                 min_temp=800,
                 write=True,
-                plot=True
+                plot=True,
+                verbose=True
                 ):
         '''
         Compute the liquidus temperature based on VP curve.
@@ -195,10 +196,15 @@ class job:
             threshold = The maximum length for a VP edge
             write = Whether or not to save the fractions and temperatures
             plot = Whether or not to plot the fractions and temperatures
+            verbose = Wheter or not to print calculation status
+
 
         outputs:
             tl = The liquidus temperature
         '''
+
+        if verbose:
+            print('Calculating Tl from VP curve')
 
         edges -= 1  # Compensate for indexing
 
@@ -224,13 +230,21 @@ class job:
         node.modifiers.append(voro)
 
         fractions = []
+        count = 0
         for frame in df['frame']:
             out = node.compute(frame)
             indexes = out.particle_properties['Voronoi Index'].array
 
-            indexes = indexes[:, edges]  # Gather edge bin
-            count = sum(indexes >= faces)  # Count condition
-            fraction = count/self.natoms  # Calculate fraction
+            # Count unique VP types
+            coords, counts = np.unique(indexes, axis=0, return_counts=True)
+
+            # Sort counts and indexes by descending order
+            indexes_sorted = counts.argsort()[::-1]
+            coords = coords[indexes_sorted]
+            counts = counts[indexes_sorted]
+
+            print(coords[0])
+            fraction = counts[0]/self.natoms  # Calculate fraction
 
             fractions.append(fraction)
 
@@ -279,7 +293,7 @@ class job:
                     )
 
             xlabel = 'Temperature [K]'
-            ylabel = r'Fractions of $n_{'+str(edges+1)+'} >= '+str(faces)+'$'
+            ylabel = 'Fractions of most common VP [-]'
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
 
@@ -306,6 +320,7 @@ class job:
             max_temp = The maximum temperature for analysis
             write = Whether or not to save Tg
             plot = Whether or not to save plot of data
+            verbose = Wheter or not to print calculation status
 
         outputs:
             tg = The Tg
@@ -455,6 +470,7 @@ class job:
             traj_path = Path with the trajectory snapshots name
             in_path = The path to the input file.
             write = Whether or not to save the APD
+            verbose = Wheter or not to print calculation status
 
         outputs:
             apd_last = The APD for the last trajectory snapsot
@@ -541,6 +557,7 @@ class job:
             threshold = The maximum length for a VP edge
             write = Whether or not to save the fractions and temperatures
             plot = Whether or not to plot the fractions and temperatures
+            verbose = Wheter or not to print calculation status
 
         outputs:
             max_number = The number of VP types considered for maximum variance
