@@ -243,8 +243,21 @@ class job:
             coords = coords[indexes_sorted]
             counts = counts[indexes_sorted]
 
-            print(coords[0])
-            fraction = counts[0]/self.natoms  # Calculate fraction
+            if count == 0:
+                vp_common_first = coords[0]
+                n_common_first = len(vp_common_first)
+                count += 1
+
+            n = len(coords[0])
+            if n_common_first < n:
+                vp_common = np.pad(vp_common_first, (0, n-n_common_first), 'constant')
+            elif n_common_first > n:
+                vp_common = vp_common_first[:-(n_common_first-n)]
+            else:
+                vp_common = vp_common_first
+
+            first_index = np.where((coords == vp_common).all(axis=1))
+            fraction = counts[first_index]/self.natoms  # Calculate fraction
 
             fractions.append(fraction)
 
@@ -266,6 +279,10 @@ class job:
         yfitcut = spl(xfitcut)
 
         tl, endpoints, middle_rmse = opt(xfitcut, yfitcut)
+
+        # Standard notation
+        vp_tracked = vp_common_first[2:]
+        vp_tracked = tuple(np.trim_zeros(vp_tracked))
 
         if plot:
 
@@ -293,7 +310,7 @@ class job:
                     )
 
             xlabel = 'Temperature [K]'
-            ylabel = 'Fractions of most common VP [-]'
+            ylabel = 'Fractions of most common VP [-]: '+str(vp_tracked)
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
 
