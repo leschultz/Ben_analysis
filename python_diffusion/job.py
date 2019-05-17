@@ -226,7 +226,13 @@ class job:
         Calculate MSD.
 
         inputs:
+            self = The object reference
+            write = Whether or not to save the fractions and temperatures
+            plot = Whether or not to plot the fractions and temperatures
+            verbose = Wheter or not to print calculation status
+
         outputs:
+            msd = Dataframe containing msd information
         '''
 
         if verbose:
@@ -264,7 +270,13 @@ class job:
             for col in plotcols:
                 y = dfmsd[col].values
 
-                ax.plot(x, y, linestyle='none', marker='.', label='element: '+col)
+                ax.plot(
+                        x,
+                        y,
+                        linestyle='none',
+                        marker='.',
+                        label='element: '+col
+                        )
 
             ax.grid()
             ax.legend()
@@ -275,12 +287,21 @@ class job:
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'msd.png'))
 
+        return msd
+
     def diffusion(self, write=True, plot=True, verbose=True):
         '''
-        Calculate diffusion from multiple time origins.
+        Calculate diffusion from multiple time origins (MTO).
 
         inputs:
+            self = The object reference
+            write = Whether or not to save the fractions and temperatures
+            plot = Whether or not to plot the fractions and temperatures
+            verbose = Wheter or not to print calculation status
+
         outputs:
+            diff = The mean diffusion
+            dfdiff = The MTO diffusion dataframe
         '''
 
         if verbose:
@@ -330,4 +351,38 @@ class job:
         dfdif['start'] = time_origins[:2]
         dfdif['stop'] = time_endings[:2]
 
-        print(dfdif)
+        if write:
+            dfdif.to_csv(
+                         os.path.join(self.datapath, 'diffusion_mo.txt'),
+                         index=False
+                         )
+
+        if plot:
+
+            fig, ax = pl.subplots()
+
+            plotcols = list(dfdif.columns.difference(['start', 'stop']))
+
+            x = dfdif['start'].values
+            for col in plotcols:
+                y = dfdif[col].values
+
+                ax.plot(
+                        x,
+                        y,
+                        linestyle='none',
+                        marker='.',
+                        label='element: '+col
+                        )
+
+            ax.grid()
+            ax.legend()
+
+            ax.set_xlabel('Time Origin from '+str(time_endings[-1])+' [ps]')
+            ax.set_ylabel(r'MSD $[10^{-4} cm^2 s^-1]$')
+
+            fig.tight_layout()
+            pl.show()
+            fig.savefig(os.path.join(self.plotpath, 'diffusion_mo.png'))
+
+        return dfdif
