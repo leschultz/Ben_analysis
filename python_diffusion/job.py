@@ -21,6 +21,53 @@ import test
 import dep
 
 
+def autocovariance(x, n, k, mean, bias=0):
+    '''
+    Compute the autocovariance of a set.
+
+    inputs:
+            x = the list of data
+            n = the size of data
+            k = the k-lag between values
+            mean = the mean of the x-data
+            bias = adjust the bias calculation
+
+    outputs:
+            autocov = the autocovariance at a k-lag
+    '''
+
+    autocov = 0.0
+    for i in np.arange(0, n-k):
+        autocov += (x[i+k]-mean)*(x[i]-mean)
+
+    autocov /= n-bias
+
+    return autocov
+
+
+def autocorrelation(x):
+    '''
+    Compute the autocorrelation for all possible k-lags.
+
+    inputs:
+            x = the data
+    outputs:
+            k = the distance between x indexes (k-lag)
+            r = the autocorrelation at a k-lag
+    '''
+
+        n = len(x)  # Number of values
+        mean = np.mean(x)  # Mean values
+        denominator = autocovariance(x, n, 0, mean)  # Normalization factor
+        k = np.arange(0, n+1)  # k-lag
+
+        r = []  # Autocorrelation for k-lag
+        for i in k:
+            r.append(autocovariance(x, n, i, mean)/denominator)
+
+        return k, r
+
+
 def self_diffusion(x, y):
     '''
     Calculate self diffusion from MSD curve.
@@ -323,16 +370,27 @@ class job:
         # Split data in half
         cut = frames.shape[0]//2
         split1 = frames[:cut]
-        split2 = frames[cut:cut+split1.shape[0]]
+
+        number = split1.shape[0]
+        split2 = frames[cut:cut+number]
 
         # Each of the time origins
         time_origins = df['time'].values[:cut]
-        time_endings = df['time'].values[cut:cut+time_origins.shape[0]]
+        time_endings = df['time'].values[cut:cut+number]
 
         # Collect diffusion coefficients
         data = []
-        count = 0
+
+        count = 1
         for start, stop in zip(split1, split2):
+
+            if verbose:
+                print(
+                      'Calculating diffusion from time origin: ' +
+                      str(count) +
+                      '/'+str(number)
+                      )
+
             dfmsd = gather_msd(self.file_trajs, start, stop)
             dfmsd.columns = [list(dfmsd.columns)[0]]+self.elements
 
@@ -344,12 +402,16 @@ class job:
             data.append(d)
 
             count += 1
-            if count > 1:
-                break
 
         dfdif = pd.DataFrame(data)
-        dfdif['start'] = time_origins[:2]
-        dfdif['stop'] = time_endings[:2]
+
+        # Determine autocorrelation of data
+        auto = dfdif.apply(autocorrelation)
+        print(auto)
+
+        # Add the interval for MTO diffusion
+        dfdif['start'] = time_origins
+        dfdif['stop'] = time_endings
 
         if write:
             dfdif.to_csv(
@@ -379,10 +441,10 @@ class job:
             ax.legend()
 
             ax.set_xlabel('Time Origin from '+str(time_endings[-1])+' [ps]')
-            ax.set_ylabel(r'MSD $[10^{-4} cm^2 s^-1]$')
+            ax.set_ylabel(r'MSD $[10^{-4} cm^{2} s^{-1}]$')
 
             fig.tight_layout()
-            pl.show()
             fig.savefig(os.path.join(self.plotpath, 'diffusion_mo.png'))
+            pl.show()
 
         return dfdif
