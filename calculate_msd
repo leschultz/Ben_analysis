@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Calculate MSD for each run
+# Inputs:
+#	<directory containing all jobs>
+#	<generic name for jobs>
+#	<export directory for analysis>
+#	<name of directory containing analysis data>
+#       <name of directory containing analysis plots>
+#	<name of trajectory file>
+#	<name of LAMMPS print to screen file>
+#	<name of input file>
+
+msd_iterator.py\
+	'../data'\
+	'job'\
+	'../export'\
+       	'analysis_data'\
+       	'analysis_plots'\
+       	'traj.lammpstrj'\
+       	'test.out'\
+       	'dep.in'
