@@ -2,7 +2,8 @@ from PyQt5 import QtGui  # Added to be able to import ovito
 
 from matplotlib import pyplot as pl
 
-from scipy.stats import linregress
+from scipy.stats import linregress, sem
+from functools import reduce
 
 import pymatgen as mg
 import pandas as pd
@@ -63,6 +64,25 @@ def autocorrelation(x):
     r = list(map(lambda lag: autocovariance(x, n, mean, lag)/denominator, k))
 
     return r
+
+
+def batch_means(x, k):
+    '''
+    Divide data into bins to calculate error from batch means.
+    
+    inputs:
+        x = data
+        k = the correlation length
+    outputs:
+        e = the error
+    '''
+
+    bins = len(x)//k  # Approximate the number of bins with lenght k
+    splits = np.array_split(x, bins)  # Split into bins
+    means = list(map(np.mean, splits))  # Average each of the bins
+    e = (np.var(means, ddof=1)/bins)**0.5  # Error
+
+    return e
 
 
 def self_diffusion(x, y):
@@ -400,7 +420,7 @@ class job:
             dfmsd = dfmsd.loc[1:, :]
 
             # Calculate diffusion for each element and all
-            d = dfmsd.apply(lambda x: self_diffusion(time_origins, x))
+            d = dfmsd.apply(lambda i: self_diffusion(time_origins, i))
             data.append(d)
 
             count += 1
@@ -413,6 +433,18 @@ class job:
         # Determine the first zero or negative autocorrelation value k-lag
         autocut = auto.apply(lambda i: np.argmax(np.array(i) <= 0))
 
+        # Calculate the error from batch means and SEM
+        difsemerr = dfdif.apply(sem)  # SEM ddof=1
+        cuts = iter(autocut.values)  # Iterate through correlation lengths
+        difbatcherr = dfdif.apply(lambda i: batch_means(i, next(cuts)))
+
+        # Calculate diffusion
+        diffusion = dfdif.apply(np.mean)
+        diffusion = [diffusion, difsemerr, difbatcherr]
+        diffusion = pd.DataFrame(diffusion).T
+        diffusion.columns = ['diffusion', 'sem', 'batch']
+        diffusion['element'] = diffusion.index
+
         # Add the interval for MTO diffusion
         dfdif['start'] = time_origins
         dfdif['stop'] = time_endings
@@ -422,6 +454,11 @@ class job:
                          os.path.join(self.datapath, 'diffusion_mo.txt'),
                          index=False
                          )
+
+            diffusion.to_csv(
+                             os.path.join(self.datapath, 'diffusion.txt'),
+                             index=False
+                             )
 
         if plot:
 
@@ -485,7 +522,5 @@ class job:
 
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'autocorrelation_mto.png'))
-
-            pl.show()
 
         return dfdif
