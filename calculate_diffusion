@@ -10,6 +10,7 @@
 #	<name of trajectory file>
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
+#	<the significance level for two sided t-test for finding settled data>
 
 diffusion_iterator.py\
 	'../data'\
@@ -19,4 +20,5 @@ diffusion_iterator.py\
        	'analysis_plots'\
        	'traj.lammpstrj'\
        	'test.out'\
-       	'dep.in'
+       	'dep.in'\
+	'0.05'

@@ -416,11 +416,6 @@ class job:
         # Reset time
         df['time'] = df['time']-df['time'][0]
 
-        #################### Testing ########################
-        df = df[df['time'] >= 45]
-        #################### Testing ########################
-
-
         frames = df['frame'].values
 
         # Split data in half
@@ -494,12 +489,19 @@ class job:
 
         if write:
             dfdif.to_csv(
-                         os.path.join(self.datapath, 'diffusion_mo.txt'),
+                         os.path.join(self.datapath, 'diffusion_mto.txt'),
                          index=False
                          )
 
+            name = os.path.join(self.datapath, 'diffusion_mto_settled.txt')
+            settled_dif.to_csv(
+                               name,
+                               index=False
+                               )
+
+            name = os.path.join(self.datapath, 'diffusion_settled.txt')
             diffusion.to_csv(
-                             os.path.join(self.datapath, 'diffusion.txt'),
+                             name,
                              index=False
                              )
 
@@ -582,7 +584,10 @@ class job:
             ax.set_ylabel('Autocorrelation [-]')
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'autocorrelation_mto.png'))
+            fig.savefig(os.path.join(
+                                     self.plotpath,
+                                     'mto_settled_autocorrelation.png'
+                                     ))
 
             pl.close('all')
 

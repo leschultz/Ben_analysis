@@ -19,6 +19,7 @@ plotdirname = sys.argv[5]  # Name of plot directory
 trajdotlammpstrj = sys.argv[6]  # Trajectories
 testdotout = sys.argv[7]  # LAMMPS print to screen
 depdotin = sys.argv[8]  # Input file
+alpha = float(sys.argv[9])  # The significance level for t-test
 
 # Loop for each path
 for item in os.walk(jobs_dir):
@@ -37,6 +38,6 @@ for item in os.walk(jobs_dir):
     run.sys(testdotout)
     run.box(trajdotlammpstrj)
 
-    run.diffusion()
+    run.diffusion(alpha=alpha)
 
     print('-'*79)
