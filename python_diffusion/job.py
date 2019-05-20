@@ -2,7 +2,7 @@ from PyQt5 import QtGui  # Added to be able to import ovito
 
 from matplotlib import pyplot as pl
 
-from scipy.stats import linregress, sem
+from scipy.stats import linregress, sem, ttest_ind
 from functools import reduce
 
 import pymatgen as mg
@@ -83,6 +83,38 @@ def batch_means(x, k):
     e = (np.var(means, ddof=1)/bins)**0.5  # Error
 
     return e
+
+
+def settle_test(x, alpha=0.05):
+    '''
+    Calculate data that is outside a distribution with respect to the last bin.
+    Return the cut index where settled data beggins.
+
+    inputs:
+        x = data
+        alpha = the significance level
+    outputs:
+        xcut = index where data after is settled
+    '''
+
+    r = autocorrelation(x)
+    k = np.argmax(np.array(r) <= 0)  # First value <= 0
+
+    bins = len(x)//k  # Approximate the number of bins with length k
+    splits = np.array_split(x, bins)  # Split into bins
+
+    null = splits[-1]  # Should approximate the settled behavior
+    p = list(map(lambda i: ttest_ind(i, null, equal_var=False)[1], splits))
+    p = np.array(p)
+
+    locs = np.where(p >= alpha)
+
+    # Combine all bins where the p-value >= alpha
+    xcut = []
+    for loc in locs[0]:
+        xcut += list(splits[loc])
+
+    return xcut
 
 
 def self_diffusion(x, y):
@@ -355,7 +387,7 @@ class job:
 
         return dfmsd
 
-    def diffusion(self, write=True, plot=True, verbose=True):
+    def diffusion(self, alpha=0.05, write=True, plot=True, verbose=True):
         '''
         Calculate diffusion from multiple time origins (MTO).
 
@@ -383,6 +415,11 @@ class job:
 
         # Reset time
         df['time'] = df['time']-df['time'][0]
+
+        #################### Testing ########################
+        df = df[df['time'] >= 45]
+        #################### Testing ########################
+
 
         frames = df['frame'].values
 
@@ -424,19 +461,22 @@ class job:
 
         dfdif = pd.DataFrame(data)
 
-        # Determine autocorrelation of data
-        auto = dfdif.apply(autocorrelation)
+        # Truncate data based on two sided t-test
+        settled_dif = dfdif.apply(lambda i: settle_test(i, alpha))
+
+        # Determine autocorrelation of settled data
+        auto = settled_dif.apply(autocorrelation)
 
         # Determine the first zero or negative autocorrelation value k-lag
         autocut = auto.apply(lambda i: np.argmax(np.array(i) <= 0))
 
         # Calculate the error from batch means and SEM
-        difsemerr = dfdif.apply(sem)  # SEM ddof=1
+        difsemerr = settled_dif.apply(sem)  # SEM ddof=1
         cuts = iter(autocut.values)  # Iterate through correlation lengths
-        difbatcherr = dfdif.apply(lambda i: batch_means(i, next(cuts)))
+        difbatcherr = settled_dif.apply(lambda i: batch_means(i, next(cuts)))
 
         # Calculate diffusion
-        diffusion = dfdif.apply(np.mean)
+        diffusion = settled_dif.apply(np.mean)
         diffusion = [diffusion, difsemerr, difbatcherr]
         diffusion = pd.DataFrame(diffusion).T
         diffusion.columns = ['diffusion', 'sem', 'batch']
@@ -445,6 +485,12 @@ class job:
         # Add the interval for MTO diffusion
         dfdif['start'] = time_origins
         dfdif['stop'] = time_endings
+
+        # Convert settled data into data frame
+        settled_dif = pd.DataFrame.from_dict(
+                                             dict(settled_dif),
+                                             orient='index'
+                                             ).T
 
         if write:
             dfdif.to_csv(
@@ -460,29 +506,47 @@ class job:
         if plot:
 
             # Plot MTO diffusion
-            fig, ax = pl.subplots()
+            fig, ax = pl.subplots(2)
 
             plotcols = list(dfdif.columns.difference(['start', 'stop']))
 
             x = dfdif['start'].values
             for col in plotcols:
                 y = dfdif[col].values
+                ysettled = settled_dif[col].values
 
-                ax.plot(
-                        x,
-                        y,
-                        linestyle='none',
-                        marker='.',
-                        label='element: '+col
-                        )
+                ax[0].plot(
+                           x,
+                           y,
+                           linestyle='none',
+                           marker='.',
+                           label='element: '+col
+                           )
 
-            ax.grid()
-            ax.legend()
+                color = ax[0].get_lines()[-1].get_color()
 
-            ax.set_xlabel('Time Origin from '+str(time_endings[-1])+' [ps]')
-            ax.set_ylabel(r'Diffusion Coefficient $[10^{-4} cm^{2} s^{-1}]$')
+                ax[1].plot(
+                           ysettled,
+                           linestyle='none',
+                           marker='.',
+                           color=color,
+                           label='element: '+col
+                           )
+
+            ax[0].grid()
+            ax[0].legend()
+
+            ax[0].set_xlabel('Time Origin from '+str(time_endings[-1])+' [ps]')
+            ax[0].set_ylabel(r'Diffusion $[10^{-4} cm^{2} s^{-1}]$')
+
+            ax[1].grid()
+            ax[1].legend()
+
+            ax[1].set_ylabel(r'Diffusion $[10^{-4} cm^{2} s^{-1}]$')
+            ax[1].set_xlabel(r'Settled Data Index $(\alpha='+str(alpha)+')$')
 
             fig.tight_layout()
+
             fig.savefig(os.path.join(self.plotpath, 'diffusion_mto.png'))
 
             # Plot autocorrelation functions
