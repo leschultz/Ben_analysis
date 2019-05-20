@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Calculate cluster variance and variety for each run
+# Calculate max cluster variance for each run
 # Inputs:
 #	<directory containing all jobs>
 #	<generic name for jobs>
@@ -11,7 +11,7 @@
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
 
-variance_and_variety_iterator.py\
+variance_iterator.py\
 	'../data'\
 	'job'\
 	'../export'\

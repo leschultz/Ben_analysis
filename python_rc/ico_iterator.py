@@ -37,6 +37,6 @@ for item in os.walk(jobs_dir):
     run.sys(testdotout)
     run.box(trajdotlammpstrj)
 
-    run.vp()
+    run.ico()
 
     print('-'*79)

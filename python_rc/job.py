@@ -174,154 +174,6 @@ class job:
 
         dfelprops = pd.DataFrame(elements).T
 
-    def find_tl(
-                self,
-                edges=5,
-                faces=10,
-                lim=0.1,
-                threshold=0.1,
-                min_temp=800,
-                write=True,
-                plot=True,
-                verbose=True
-                ):
-        '''
-        Compute the liquidus temperature based on VP curve.
-
-        inputs:
-            self = The object reference
-            edges = The number of VP edges
-            faces = The number of minimum faces for the specified edges
-            lim = The threshold for the upper and lower cut values
-            threshold = The maximum length for a VP edge
-            write = Whether or not to save the fractions and temperatures
-            plot = Whether or not to plot the fractions and temperatures
-            verbose = Wheter or not to print calculation status
-
-
-        outputs:
-            tl = The liquidus temperature
-        '''
-
-        if verbose:
-            print('Calculating Tl from VP curve')
-
-        edges -= 1  # Compensate for indexing
-
-        # Merge dfsys and dftraj on matching steps
-        df = pd.merge(
-                      self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
-                      self.dftraj, on=['Step', 'time']
-                      )
-
-        condition = df['Step'] >= self.hold1
-        df = df[condition]
-        df = df.reset_index(drop=True)
-
-        # Load input data and create an ObjectNode with a data pipeline.
-        node = import_file(self.file_trajs, multiple_frames=True)
-
-        voro = VoronoiAnalysisModifier(
-                                       compute_indices=True,
-                                       use_radii=False,
-                                       edge_threshold=threshold
-                                       )
-
-        node.modifiers.append(voro)
-
-        fractions = []
-        count = 0
-        for frame in df['frame']:
-            out = node.compute(frame)
-            indexes = out.particle_properties['Voronoi Index'].array
-
-            # Count unique VP types
-            coords, counts = np.unique(indexes, axis=0, return_counts=True)
-
-            # Sort counts and indexes by descending order
-            indexes_sorted = counts.argsort()[::-1]
-            coords = coords[indexes_sorted]
-            counts = counts[indexes_sorted]
-
-            if count == 0:
-                vp_common_first = coords[0]
-                n_common_first = len(vp_common_first)
-                count += 1
-
-            n = len(coords[0])
-            if n_common_first < n:
-                vp_common = np.pad(vp_common_first, (0, n-n_common_first), 'constant')
-            elif n_common_first > n:
-                vp_common = vp_common_first[:-(n_common_first-n)]
-            else:
-                vp_common = vp_common_first
-
-            first_index = np.where((coords == vp_common).all(axis=1))
-            fraction = counts[first_index]/self.natoms  # Calculate fraction
-
-            fractions.append(fraction)
-
-        df['fractions'] = fractions
-        df = df.sort_values(by=['Temp'])
-
-        x = df['Temp'].values
-        y = df['fractions'].values
-
-        # Cutoff region
-        cut = x >= min_temp
-        xcut = x[cut]
-        ycut = y[cut]
-
-        # Spline fit of cut region
-        k, s = (5, 1)
-        spl = UnivariateSpline(x=xcut, y=ycut, k=k, s=s)
-        xfitcut = np.linspace(xcut[0], xcut[-1], 100)
-        yfitcut = spl(xfitcut)
-
-        tl, endpoints, middle_rmse = opt(xfitcut, yfitcut)
-
-        # Standard notation
-        vp_tracked = vp_common_first[2:]
-        vp_tracked = tuple(np.trim_zeros(vp_tracked))
-
-        if plot:
-
-            fig, ax = pl.subplots()
-
-            ax.plot(x, y, marker='.', linestyle='none', label='data')
-            ax.axvline(
-                       tl,
-                       color='r',
-                       linestyle=':',
-                       label='Tl='+str(tl)+' [K]'
-                       )
-
-            ax.axvline(
-                       min_temp,
-                       color='k',
-                       label='cutoff = '+str(min_temp)+' [K]'
-                       )
-
-            ax.plot(
-                    xfitcut,
-                    yfitcut,
-                    linestyle='-',
-                    label='Univariate Spline (k='+str(k)+', s='+str(s)+')'
-                    )
-
-            xlabel = 'Temperature [K]'
-            ylabel = 'Fractions of most common VP [-]: '+str(vp_tracked)
-            ax.set_xlabel(xlabel)
-            ax.set_ylabel(ylabel)
-
-            ax.grid()
-            ax.legend()
-
-            fig.tight_layout()
-            pl.show()
-
-        return tl
-
     def etg(
             self,
             max_temp=1000,
@@ -558,16 +410,98 @@ class job:
 
         return apd_last
 
-    def vp(
-           self,
-           threshold=0.1,
-           write=True,
-           plot=True,
-           first=10,
-           verbose=True
-           ):
+    def ico(
+            self,
+            edges=5,
+            faces=10,
+            threshold=0.1,
+            write=True,
+            plot=True
+            ):
         '''
-        Do the cluster analysis for n_5 >= 10 Voronoi polyhedra (VP).
+        Compute the temperature-ICO curve.
+
+        inputs:
+            self = The object reference
+            edges = The number of VP edges
+            faces = The number of minimum faces for the specified edges
+            threshold = The maximum length for a VP edge
+            write = Whether or not to save the fractions and temperatures
+            plot = Whether or not to plot the fractions and temperatures
+
+        outputs:
+            tl = The liquidus temperature
+        '''
+
+        edges -= 1  # Compensate for indexing
+
+        # Merge dfsys and dftraj on matching steps
+        df = pd.merge(
+                      self.dfsys.loc[:, self.dfsys.columns != 'Volume'],
+                      self.dftraj, on=['Step', 'time']
+                      )
+
+        condition = df['Step'] >= self.hold1
+        df = df[condition]
+        df = df.reset_index(drop=True)
+
+        # Load input data and create an ObjectNode with a data pipeline.
+        node = import_file(self.file_trajs, multiple_frames=True)
+
+        voro = VoronoiAnalysisModifier(
+                                       compute_indices=True,
+                                       use_radii=False,
+                                       edge_threshold=threshold
+                                       )
+
+        node.modifiers.append(voro)
+
+        fractions = []
+        for frame in df['frame']:
+            out = node.compute(frame)
+            indexes = out.particle_properties['Voronoi Index'].array
+
+            indexes = indexes[:, edges]  # Gather edge bin
+            count = sum(indexes >= faces)  # Count condition
+            fraction = count/self.natoms  # Calculate fraction
+
+            fractions.append(fraction)
+
+        df['fractions'] = fractions
+        df = df.sort_values(by=['Temp'])
+
+        x = df['Temp'].values
+        y = df['fractions'].values
+
+        if plot:
+
+            fig, ax = pl.subplots()
+
+            ax.plot(x, y, marker='.', linestyle='none', label='data')
+
+            xlabel = 'Temperature [K]'
+            ylabel = r'Fractions of $n_{'+str(edges+1)+'} >= '+str(faces)+'$'
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+
+            ax.grid()
+            ax.legend()
+
+            fig.tight_layout()
+            fig.savefig(os.path.join(self.plotpath, 'ico.png'))
+
+        return df
+
+    def vp_variance(
+                    self,
+                    threshold=0.1,
+                    write=True,
+                    plot=True,
+                    first=10,
+                    verbose=True
+                    ):
+        '''
+        Calculate the maximum variance of clusters.
 
         inputs:
             self = The object reference
@@ -577,9 +511,8 @@ class job:
             verbose = Wheter or not to print calculation status
 
         outputs:
-            max_number = The number of VP types considered for maximum variance
-            max_variance = The maximum variance
-            variety =  The variety of clusters
+            variance = The variance of clusters as a function of number 
+                       included
         '''
 
         if verbose:
@@ -662,19 +595,12 @@ class job:
         # Gather fraction values
         fractions = counts/total
 
-        # The average number of types of VP seen over all atoms from all frames
-        variety = counts.shape[0]/total
-
         # Calculate variance from list including ordered fractions of VP
         variance = []
         for i in range(1, counts.shape[0]):
             variance.append(np.var(fractions[:i]))
 
         variance = np.array(variance)  # Numpy array
-
-        max_index = np.argmax(variance)
-        max_variance = variance[max_index]
-        max_number = max_index+1
 
         # Create a directory for the analysis files
         if write:
@@ -684,11 +610,6 @@ class job:
                        os.path.join(self.datapath, 'variance.txt'),
                        variance,
                        )
-
-            # Export the variety calculated
-            write_name = os.path.join(self.datapath, 'variety.txt')
-            with open(write_name, 'w+') as outfile:
-                outfile.write(str(variety))
 
         if plot:
 
@@ -702,14 +623,6 @@ class job:
                     linestyle='none',
                     label='Data for '+str(frames)+' frames'
                     )
-
-            max_label = 'Maximum variance: '+str((max_number, max_variance))
-            ax.axvline(
-                       max_number,
-                       linestyle=':',
-                       color='r',
-                       label=max_label
-                       )
 
             ax.set_ylabel('Variance of VP [-]')
             ax.set_xlabel('Number of VP Types [-]')
@@ -738,4 +651,4 @@ class job:
 
             pl.close('all')
 
-        return max_number, max_variance, variety
+        return variance

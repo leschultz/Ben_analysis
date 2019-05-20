@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Calculate Tl for each run
+# Calculate ICO fractions for each run
 # Inputs:
 #	<directory containing all jobs>
 #	<generic name for jobs>
@@ -11,7 +11,7 @@
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
 
-tl_iterator.py\
+ico_iterator.py\
 	'../data'\
 	'job'\
 	'../export'\
