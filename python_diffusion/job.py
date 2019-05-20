@@ -351,6 +351,8 @@ class job:
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'msd.png'))
 
+            pl.close('all')
+
         return dfmsd
 
     def diffusion(self, write=True, plot=True, verbose=True):
@@ -382,16 +384,11 @@ class job:
         # Reset time
         df['time'] = df['time']-df['time'][0]
 
-        # For testing purposes
-        df = df[df['time'] >= 45]
-        df = df.reset_index(drop=True)
-
         frames = df['frame'].values
 
-        ################## Split data in half
+        # Split data in half
         cut = frames.shape[0]//2
         split1 = frames[:cut]
-        ##################
 
         number = split1.shape[0]
         split2 = frames[cut:cut+number]
@@ -522,5 +519,7 @@ class job:
 
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'autocorrelation_mto.png'))
+
+            pl.close('all')
 
         return dfdif

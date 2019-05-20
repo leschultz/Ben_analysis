@@ -327,6 +327,7 @@ class job:
 
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'etg_rmse.png'))
+
             pl.close('all')
 
         return tg
@@ -489,6 +490,8 @@ class job:
 
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'ico.png'))
+
+            pl.close('all')
 
         return df
 
