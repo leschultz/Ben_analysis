@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Gather diffusion coefficients from analysis
+# Inputs:
+#       <analysis data from jobs>
+#	<name of file containing APD>
+#       <export directory>
+
+gather_diffusion.py\
+       	'../export'\
+       	'diffusion_settled.txt'\
+       	'../export/analysis_data'
