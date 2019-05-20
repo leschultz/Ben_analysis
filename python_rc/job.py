@@ -443,7 +443,7 @@ class job:
             ax[1].axvline(
                           tg,
                           linestyle='--',
-                          color='r',
+                          color='g',
                           label='Tg = '+str(tg)+' [K]'
                           )
 

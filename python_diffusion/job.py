@@ -21,15 +21,15 @@ import test
 import dep
 
 
-def autocovariance(x, n, k, mean, bias=0):
+def autocovariance(x, n, mean, k, bias=0):
     '''
     Compute the autocovariance of a set.
 
     inputs:
             x = the list of data
             n = the size of data
-            k = the k-lag between values
             mean = the mean of the x-data
+            k = the k-lag between values
             bias = adjust the bias calculation
 
     outputs:
@@ -52,20 +52,17 @@ def autocorrelation(x):
     inputs:
             x = the data
     outputs:
-            k = the distance between x indexes (k-lag)
             r = the autocorrelation at a k-lag
     '''
 
-        n = len(x)  # Number of values
-        mean = np.mean(x)  # Mean values
-        denominator = autocovariance(x, n, 0, mean)  # Normalization factor
-        k = np.arange(0, n+1)  # k-lag
+    n = len(x)  # Number of values
+    mean = np.mean(x)  # Mean values
+    denominator = autocovariance(x, n, mean, 0)  # Normalization factor
+    k = np.arange(0, n+1)  # k-lag
 
-        r = []  # Autocorrelation for k-lag
-        for i in k:
-            r.append(autocovariance(x, n, i, mean)/denominator)
+    r = list(map(lambda lag: autocovariance(x, n, mean, lag)/denominator, k))
 
-        return k, r
+    return r
 
 
 def self_diffusion(x, y):
@@ -279,7 +276,7 @@ class job:
             verbose = Wheter or not to print calculation status
 
         outputs:
-            msd = Dataframe containing msd information
+            dfmsd = Dataframe containing msd information
         '''
 
         if verbose:
@@ -334,7 +331,7 @@ class job:
             fig.tight_layout()
             fig.savefig(os.path.join(self.plotpath, 'msd.png'))
 
-        return msd
+        return dfmsd
 
     def diffusion(self, write=True, plot=True, verbose=True):
         '''
@@ -365,11 +362,16 @@ class job:
         # Reset time
         df['time'] = df['time']-df['time'][0]
 
+        # For testing purposes
+        df = df[df['time'] >= 45]
+        df = df.reset_index(drop=True)
+
         frames = df['frame'].values
 
-        # Split data in half
+        ################## Split data in half
         cut = frames.shape[0]//2
         split1 = frames[:cut]
+        ##################
 
         number = split1.shape[0]
         split2 = frames[cut:cut+number]
@@ -407,7 +409,9 @@ class job:
 
         # Determine autocorrelation of data
         auto = dfdif.apply(autocorrelation)
-        print(auto)
+
+        # Determine the first zero or negative autocorrelation value k-lag
+        autocut = auto.apply(lambda i: np.argmax(np.array(i) <= 0))
 
         # Add the interval for MTO diffusion
         dfdif['start'] = time_origins
@@ -421,6 +425,7 @@ class job:
 
         if plot:
 
+            # Plot MTO diffusion
             fig, ax = pl.subplots()
 
             plotcols = list(dfdif.columns.difference(['start', 'stop']))
@@ -441,10 +446,46 @@ class job:
             ax.legend()
 
             ax.set_xlabel('Time Origin from '+str(time_endings[-1])+' [ps]')
-            ax.set_ylabel(r'MSD $[10^{-4} cm^{2} s^{-1}]$')
+            ax.set_ylabel(r'Diffusion Coefficient $[10^{-4} cm^{2} s^{-1}]$')
 
             fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'diffusion_mo.png'))
+            fig.savefig(os.path.join(self.plotpath, 'diffusion_mto.png'))
+
+            # Plot autocorrelation functions
+            fig, ax = pl.subplots()
+
+            for autoitems, cutitems in zip(auto.iteritems(), autocut.iteritems()):
+
+                ax.plot(
+                        autoitems[1],
+                        marker='.',
+                        label='element: '+autoitems[0]
+                        )
+
+                color = ax.get_lines()[-1].get_color()
+
+                vlinelabel = (
+                              cutitems[0] +
+                              ' correlation length: ' +
+                              str(cutitems[1])
+                              )
+
+                ax.axvline(
+                           cutitems[1],
+                           linestyle=':',
+                           color=color,
+                           label=vlinelabel
+                           )
+
+            ax.grid()
+            ax.legend()
+
+            ax.set_xlabel('k-lag [-]')
+            ax.set_ylabel('Autocorrelation [-]')
+
+            fig.tight_layout()
+            fig.savefig(os.path.join(self.plotpath, 'autocorrelation_mto.png'))
+
             pl.show()
 
         return dfdif
