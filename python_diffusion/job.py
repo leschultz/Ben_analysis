@@ -602,13 +602,13 @@ class job:
 
     def ico(
             self,
-            edges=5,
-            faces=10,
+            edges,
+            faces,
             threshold=0.1,
             write=True
             ):
         '''
-        Compute the temperature-ICO curve.
+        Compute the ICO fraction at Tg.
 
         inputs:
             self = the object reference

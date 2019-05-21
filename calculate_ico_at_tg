@@ -10,6 +10,8 @@
 #	<name of trajectory file>
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
+#	<edges of interest>
+#	<minimum number of faces for corresponding edges>
 
 ico_at_tg_iterator.py\
 	'../data'\
@@ -19,4 +21,6 @@ ico_at_tg_iterator.py\
        	'analysis_plots'\
        	'traj.lammpstrj'\
        	'test.out'\
-       	'dep.in'
+       	'dep.in'\
+	'5'\
+	'10'

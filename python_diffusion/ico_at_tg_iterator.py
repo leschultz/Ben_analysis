@@ -20,6 +20,9 @@ trajdotlammpstrj = sys.argv[6]  # Trajectories
 testdotout = sys.argv[7]  # LAMMPS print to screen
 depdotin = sys.argv[8]  # Input file
 
+edges = int(sys.argv[9])  # The edges of interest
+faces = int(sys.argv[10])  # The face threshold for the edges of interest
+
 # Loop for each path
 for item in os.walk(jobs_dir):
 
@@ -37,6 +40,6 @@ for item in os.walk(jobs_dir):
     run.sys(testdotout)
     run.box(trajdotlammpstrj)
 
-    run.ico()
+    run.ico(edges=edges, faces=faces)
 
     print('-'*79)
