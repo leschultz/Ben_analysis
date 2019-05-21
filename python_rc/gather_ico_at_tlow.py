@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 '''
-Construct APD dataframe for analysis data.
+Construct ICO at low T dataframe for analysis data.
 '''
 
 import pandas as pd
@@ -11,7 +11,7 @@ import sys
 import os
 
 jobs_dir = sys.argv[1]  # Directory where run analysis data is stored
-apd_file = sys.argv[2]  # APD file name
+ico_tlow_file = sys.argv[2]  # ico file name
 export_dir = sys.argv[3]  # The export directory
 
 # Make export directory
@@ -24,7 +24,7 @@ for item in os.walk(jobs_dir):
     files = item[-1]
 
     # Check if files are present
-    if apd_file not in files:
+    if ico_tlow_file not in files:
         continue
 
     split = path.split('/')
@@ -34,16 +34,16 @@ for item in os.walk(jobs_dir):
     steps = int(split[-3])
     job = split[-2]
 
-    apd_path = os.path.join(path, apd_file)
+    ico_tlow_path = os.path.join(path, ico_tlow_file)
 
-    apd = np.loadtxt(apd_path)
+    ico_tlow = np.loadtxt(ico_tlow_path)
 
-    row = [system, composition, steps, job, apd]
+    row = [system, composition, steps, job, ico_tlow]
 
     rows.append(row)
 
 df = pd.DataFrame(rows)
-df.columns = ['system', 'composition', 'steps', 'job', 'apd']
+df.columns = ['system', 'composition', 'steps', 'job', 'ico_tlow']
 
-df.to_csv(os.path.join(export_dir, 'apd_df.txt'), index=False)
-df.to_html(os.path.join(export_dir, 'apd_df.html'), index=False)
+df.to_csv(os.path.join(export_dir, 'ico_tlow_df.txt'), index=False)
+df.to_html(os.path.join(export_dir, 'ico_tlow_df.html'), index=False)

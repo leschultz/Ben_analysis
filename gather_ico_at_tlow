@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Gather ICO at low T values from analysis
+# Inputs:
+#       <analysis data from jobs>
+#	<name of file containing ico_at_tlow>
+#       <export directory>
+
+gather_ico_at_tlow.py\
+       	'../export'\
+       	'ico_at_tlow.txt'\
+       	'../export/analysis_data'

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Gather ICO at Tg values from analysis
+# Inputs:
+#       <analysis data from jobs>
+#	<name of file containing ico_at_tg>
+#       <export directory>
+
+gather_ico_at_tg.py\
+       	'../export'\
+       	'ico_at_tg.txt'\
+       	'../export/analysis_data'
