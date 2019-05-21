@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Calculate ICO fraction at low T
+# Inputs:
+#       <directory containing all jobs>
+#       <generic directory containing data files>
+#       <name of trajectory file>
+#       <name of input file>
+#       <export directory for analysis>
+#       <name of directory containing analysis data>
+#	<edges of interest>
+#	<minimum number of faces for corresponding edges>
+
+ico_at_tlow_iterator.py\
+        '../data'\
+        '100K_Structure_minimization'\
+        'finaltraj.lammpstrj'\
+        '100k_minimize_template.in'\
+        '../export'\
+        'analysis_data'\
+	'5'\
+	'10'

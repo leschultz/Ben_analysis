@@ -605,7 +605,8 @@ class job:
             edges,
             faces,
             threshold=0.1,
-            write=True
+            write=True,
+            verbose=True
             ):
         '''
         Compute the ICO fraction at Tg.
@@ -616,10 +617,14 @@ class job:
             faces = the number of minimum faces for the specified edges
             threshold = the maximum length for a VP edge
             write = whether or not to save the fractions and temperatures
+            verbose = Wheter or not to print calculation status
 
         outputs:
             fraction = the ICO fraction at Tg
         '''
+
+        if verbose:
+            print('Calculating ICO fraction near Tg')
 
         edges -= 1  # Compensate for indexing
 

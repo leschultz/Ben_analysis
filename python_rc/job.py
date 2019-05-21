@@ -574,41 +574,41 @@ class job:
 
     def ico(
             self,
+            traj_path,
+            in_path,
             edges,
-            faces0,
+            faces,
             threshold=0.1,
-            write=True
+            write=True,
+            verbose=True
             ):
         '''
         Compute the ICO fraction at low T.
 
         inputs:
             self = the object reference
+            traj_path = Path with the trajectory snapshots name
+            in_path = The path to the input file.
             edges = the number of VP edges
             faces = the number of minimum faces for the specified edges
             threshold = the maximum length for a VP edge
             write = whether or not to save the fractions and temperatures
+            verbose = Wheter or not to print calculation status
 
         outputs:
             fraction = the ICO fraction at low T
         '''
 
+        if verbose:
+            print('Calculating ICO fraction at low T')
+
         edges -= 1  # Compensate for indexing
 
-        # Find the interval for the isothermal hold
-        condition = (self.dftraj['Step'] >= self.hold1)
-
-        # Grab trajectory information from interval
-        df = self.dftraj[condition]
-        df = df.reset_index(drop=True)
-
-        print(df)
-
-        # Reset time
-        df['time'] = df['time']-df['time'][0]
+        df, counts = traj.info(traj_path)
+        frame = df.index[-1]  # The last frame
 
         # Load input data and create an ObjectNode with a data pipeline.
-        node = import_file(self.file_trajs, multiple_frames=True)
+        node = import_file(traj_path, multiple_frames=True)
 
         voro = VoronoiAnalysisModifier(
                                        compute_indices=True,
@@ -618,21 +618,9 @@ class job:
 
         node.modifiers.append(voro)
 
-        vp_indexes = []
-        for frame in df['frame'][:3]:
-            out = node.compute(frame)
+        out = node.compute(frame)
 
-            indexes = out.particle_properties['Voronoi Index'].array
-            vp_indexes.append(indexes)
-
-        # Combine all the frames
-        vp_indexes = [pd.DataFrame(i) for i in vp_indexes]
-        dfindexes = pd.concat(vp_indexes)
-        dfindexes = dfindexes.fillna(0)  # Replace na with zero
-        dfindexes = dfindexes.astype(int)  # Make sure all counts are integers
-        dfindexes = dfindexes.reset_index(drop=True)
-
-        indexes = dfindexes.values
+        indexes = out.particle_properties['Voronoi Index'].array
         indexes = indexes[:, edges]  # Gather edge bin
 
         count = sum(indexes >= faces)  # Count condition
@@ -640,7 +628,7 @@ class job:
 
         if write:
 
-            write_name = os.path.join(self.datapath, 'ico_at_tg.txt')
+            write_name = os.path.join(self.datapath, 'ico_at_tlow.txt')
             with open(write_name, 'w+') as outfile:
                 outfile.write(str(fraction))
 
