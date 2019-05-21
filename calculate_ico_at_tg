@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Calculate ICO fractions for each run
+# Calculate ICO fraction at Tg hold
 # Inputs:
 #	<directory containing all jobs>
 #	<generic name for jobs>
@@ -11,7 +11,7 @@
 #	<name of LAMMPS print to screen file>
 #	<name of input file>
 
-ico_iterator.py\
+ico_at_tg_iterator.py\
 	'../data'\
 	'job'\
 	'../export'\

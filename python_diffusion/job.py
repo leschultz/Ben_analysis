@@ -14,6 +14,7 @@ import ast
 import os
 
 from ovito.modifiers import CalculateDisplacementsModifier
+from ovito.modifiers import VoronoiAnalysisModifier
 from ovito.modifiers import PythonScriptModifier
 from ovito.io import import_file
 
@@ -598,3 +599,76 @@ class job:
             pl.close('all')
 
         return dfdif
+
+    def ico(
+            self,
+            edges=5,
+            faces=10,
+            threshold=0.1,
+            write=True
+            ):
+        '''
+        Compute the temperature-ICO curve.
+
+        inputs:
+            self = the object reference
+            edges = the number of VP edges
+            faces = the number of minimum faces for the specified edges
+            threshold = the maximum length for a VP edge
+            write = whether or not to save the fractions and temperatures
+
+        outputs:
+            fraction = the ICO fraction at Tg
+        '''
+
+        edges -= 1  # Compensate for indexing
+
+        # Find the interval for the isothermal hold
+        cutoff = sum(self.runsteps[:5])
+        condition = (self.dftraj['Step'] >= cutoff)
+
+        # Grab trajectory information from interval
+        df = self.dftraj[condition]
+        df = df.reset_index(drop=True)
+
+        # Reset time
+        df['time'] = df['time']-df['time'][0]
+
+        # Load input data and create an ObjectNode with a data pipeline.
+        node = import_file(self.file_trajs, multiple_frames=True)
+
+        voro = VoronoiAnalysisModifier(
+                                       compute_indices=True,
+                                       use_radii=False,
+                                       edge_threshold=threshold
+                                       )
+
+        node.modifiers.append(voro)
+
+        vp_indexes = []
+        for frame in df['frame'][:3]:
+            out = node.compute(frame)
+
+            indexes = out.particle_properties['Voronoi Index'].array
+            vp_indexes.append(indexes)
+
+        # Combine all the frames
+        vp_indexes = [pd.DataFrame(i) for i in vp_indexes]
+        dfindexes = pd.concat(vp_indexes)
+        dfindexes = dfindexes.fillna(0)  # Replace na with zero
+        dfindexes = dfindexes.astype(int)  # Make sure all counts are integers
+        dfindexes = dfindexes.reset_index(drop=True)
+
+        indexes = dfindexes.values
+        indexes = indexes[:, edges]  # Gather edge bin
+
+        count = sum(indexes >= faces)  # Count condition
+        fraction = count/indexes.shape[0]  # Calculate fraction
+
+        if write:
+
+            write_name = os.path.join(self.datapath, 'ico_at_tg.txt')
+            with open(write_name, 'w+') as outfile:
+                outfile.write(str(fraction))
+
+        return fraction
