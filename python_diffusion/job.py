@@ -70,7 +70,7 @@ def autocorrelation(x):
 def batch_means(x, k):
     '''
     Divide data into bins to calculate error from batch means.
-    
+
     inputs:
         x = data
         k = the correlation length
@@ -161,6 +161,7 @@ def msdmodify(frame, data):
 
     # Export msd
     data.attributes['msd'] = msd
+
 
 def gather_msd(file_trajs, start, stop):
     '''
@@ -353,7 +354,7 @@ class job:
         cols = [list(dfmsd.columns)[0]]+self.elements
         cols = cols[:len(dfmsd.columns)]
         dfmsd.columns = cols
-        
+
         dfmsd['time'] = df['time']-df['time'][0]
 
         if write:
@@ -561,7 +562,8 @@ class job:
             # Plot autocorrelation functions
             fig, ax = pl.subplots()
 
-            for autoitems, cutitems in zip(auto.iteritems(), autocut.iteritems()):
+            zipitem = zip(auto.iteritems(), autocut.iteritems())
+            for autoitems, cutitems in zipitem:
 
                 ax.plot(
                         autoitems[1],

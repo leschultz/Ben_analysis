@@ -430,7 +430,7 @@ class job:
             verbose = Wheter or not to print calculation status
 
         outputs:
-            variance = The variance of clusters as a function of number 
+            variance = The variance of clusters as a function of number
                        included
         '''
 
