@@ -348,7 +348,10 @@ class job:
         stop = frames[-1]
 
         dfmsd = gather_msd(self.file_trajs, start, stop)
-        dfmsd.columns = [list(dfmsd.columns)[0]]+self.elements
+
+        cols = [list(dfmsd.columns)[0]]+self.elements
+        cols = cols[:len(dfmsd.columns)]
+        dfmsd.columns = cols
         
         dfmsd['time'] = df['time']-df['time'][0]
 
@@ -443,7 +446,10 @@ class job:
                       )
 
             dfmsd = gather_msd(self.file_trajs, start, stop)
-            dfmsd.columns = [list(dfmsd.columns)[0]]+self.elements
+
+            cols = [list(dfmsd.columns)[0]]+self.elements
+            cols = cols[:len(dfmsd.columns)]
+            dfmsd.columns = cols
 
             # Remove first value which is always zero
             dfmsd = dfmsd.loc[1:, :]
