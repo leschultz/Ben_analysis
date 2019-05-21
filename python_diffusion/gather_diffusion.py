@@ -31,7 +31,7 @@ for item in os.walk(jobs_dir):
     split = path.split('/')
     system = split[-5]
     composition = split[-4]
-    steps = float(split[-3])
+    tg = float(split[-3])
     job = split[-2]
 
     diffusion_path = os.path.join(path, diffusion_file)
@@ -39,13 +39,13 @@ for item in os.walk(jobs_dir):
     diffusion = pd.read_csv(diffusion_path)
     diffusion['system'] = system
     diffusion['composition'] = composition
+    diffusion['tg'] = tg
     diffusion['job'] = job
 
     rows.append(diffusion)
 
 df = pd.concat(rows)
 df = df.reset_index(drop=True)
-print(df)
 
 df.to_csv(os.path.join(export_dir, 'diffusion_df.txt'), index=False)
 df.to_html(os.path.join(export_dir, 'diffusion_df.html'), index=False)
