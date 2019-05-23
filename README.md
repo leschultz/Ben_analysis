@@ -147,16 +147,18 @@ xlrd==1.2.0
 Make sure to include this folder and the python folder in the environment variable PATH.
 If on a linux machine, include the following to either a .bashrc or .zshrc file in the home directory:
 
-```
 # Path to analysis_scripts
+
+```
 export PATH="/home/nerve/Tools/analysis_scripts":$PATH
 export PATH="/home/nerve/Tools/analysis_scripts/python_rc":$PATH
 ```
 
 The wrapper for OVITO is needed aswell. Make sure to include OVITO's python scripts in $PYTHONPATH.
 
-```
 # Path to OVITO python wrapper
+
+```
 export PYTHONPATH="/home/nerve/Tools/ovito/lib/ovito/plugins/python":$PYTHONPATH
 ```
 
@@ -176,10 +178,21 @@ plot_composition_tg
 
 Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool use. The order listed ensure functionality because some scripts need data produced from other scripts to function.
 
+## Coding Style
+
+Python scripts follow PEP 8 guidelines. A usefull tool to use to check a coding style is pycodestyle.
+
+```
+pycodestyle script.py
+```
+
 ## Authors
 
 * **Lane Schultz** - *Initial work* - [leschultz](https://github.com/leschultz)
 
 ## Acknowledgments
 
+* The Computational Materials Group (CMG) at the University of Wisconsin - Madison
+* Dr. Dane Morgan for computational material science guidence
+* Dr. Izabela Szlufarska for computational material science guidence
 * Benjamin Afflerbach (data)
