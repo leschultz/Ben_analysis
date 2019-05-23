@@ -152,6 +152,8 @@ If on a linux machine, include the following to either a .bashrc or .zshrc file 
 ```
 export PATH="/home/nerve/Tools/analysis_scripts":$PATH
 export PATH="/home/nerve/Tools/analysis_scripts/python_rc":$PATH
+export PATH="/home/nerve/Tools/analysis_scripts/python_diffusion":$PATH
+export PATH="/home/nerve/Tools/analysis_scripts/python_misc":$PATH
 ```
 
 The wrapper for OVITO is needed aswell. Make sure to include OVITO's python scripts in $PYTHONPATH.
@@ -162,13 +164,13 @@ The wrapper for OVITO is needed aswell. Make sure to include OVITO's python scri
 export PYTHONPATH="/home/nerve/Tools/ovito/lib/ovito/plugins/python":$PYTHONPATH
 ```
 
-A sample use of the bash scripts is the following:
+A sample use of the bash scripts is the following for Ben's Rc runs:
 
 ```
 cd data
 calculate_tg
 calculate_apd
-calculate_variety_and_variance
+calculate_variance
 gather_tg
 gather_apd
 calculate_mean_tg
@@ -176,7 +178,19 @@ calculate_mean_apd
 plot_composition_tg
 ```
 
-Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool use. The order listed ensure functionality because some scripts need data produced from other scripts to function.
+A sample use of the bash scripts is the following for Ben's diffusion runs:
+
+```
+calculate_diffusion
+gather_diffusion
+calculate_ico_at_tg
+gather_ico_at_tg
+calculate_ico_at_tlow
+gather_ico_at_tlow
+calculate_msd
+```
+
+Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool use. The order listed ensure functionality because some scripts need data produced from other scripts to function. Furthermore, some of these scripts are only applicable for a specific set of runs.
 
 ## Coding Style
 
