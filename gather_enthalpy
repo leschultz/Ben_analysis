@@ -7,8 +7,8 @@
 #	<name of the input file>
 #	<LAMMPS log file>
 
-enthalpy_iterator.py\
+gather_enthalpy.py\
 	'../data'\
-	'../export'\
+	'../export/analysis_data'\
 	'crystal_ref_run.in'\
        	'log.lammps'
