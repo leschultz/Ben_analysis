@@ -153,6 +153,7 @@ If on a linux machine, include the following to either a .bashrc or .zshrc file 
 export PATH="/home/nerve/Tools/analysis_scripts":$PATH
 export PATH="/home/nerve/Tools/analysis_scripts/python_rc":$PATH
 export PATH="/home/nerve/Tools/analysis_scripts/python_diffusion":$PATH
+export PATH="/home/nerve/Tools/analysis_scripts/python_crystal":$PATH
 export PATH="/home/nerve/Tools/analysis_scripts/python_misc":$PATH
 ```
 
@@ -175,6 +176,8 @@ gather_tg
 gather_apd
 calculate_mean_tg
 calculate_mean_apd
+gather_enthalpy_glass
+calculate_mean_enthalpy_glass
 plot_composition_tg
 ```
 
@@ -188,6 +191,12 @@ gather_ico_at_tg
 calculate_ico_at_tlow
 gather_ico_at_tlow
 calculate_msd
+```
+
+A sample use of the bash scripts is the following for Ben's crystal enthalpy runs:
+
+```
+gather_enthalpy_crystal
 ```
 
 Each of the commands calculates a different set of data. All data is stored in a directory called export. Each of the bash scripts in commented for python tool use. The order listed ensure functionality because some scripts need data produced from other scripts to function. Furthermore, some of these scripts are only applicable for a specific set of runs.
