@@ -65,5 +65,5 @@ for item in os.walk(jobs_dir):
 df = pd.DataFrame(df)
 df.columns = ['phase', 'system', 'composition', 'enthalpy']
 
-df.to_csv(os.path.join(export_dir, 'enthalpy_df.txt'), index=False)
-df.to_html(os.path.join(export_dir, 'enthalpy_df.html'), index=False)
+df.to_csv(os.path.join(export_dir, 'enthalpy_crystal_df.txt'), index=False)
+df.to_html(os.path.join(export_dir, 'enthalpy_crystal_df.html'), index=False)

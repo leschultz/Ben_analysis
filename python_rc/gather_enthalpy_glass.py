@@ -52,18 +52,20 @@ for item in os.walk(jobs_dir):
 
     split = path.split('/')
 
-    phase = split[-3]
-    system = split[-2]
-    composition = split[-1]
+    phase = split[-6]
+    system = split[-5]
+    composition = split[-4]
+    steps = split[-3]
+    job = split[-2]
 
     dfdata = pd.DataFrame(data, columns=columns)
     enthalpy = dfdata['enthalpy'].values[-1]
 
-    row = [phase, system, composition, enthalpy]
+    row = [system, composition, steps, job, enthalpy]
     df.append(row)
 
 df = pd.DataFrame(df)
-df.columns = ['phase', 'system', 'composition', 'enthalpy']
+df.columns = ['system', 'composition', 'steps', 'job', 'enthalpy']
 
-df.to_csv(os.path.join(export_dir, 'enthalpy_df.txt'), index=False)
-df.to_html(os.path.join(export_dir, 'enthalpy_df.html'), index=False)
+df.to_csv(os.path.join(export_dir, 'enthalpy_glass_df.txt'), index=False)
+df.to_html(os.path.join(export_dir, 'enthalpy_glass_df.html'), index=False)

@@ -10,5 +10,5 @@
 gather_enthalpy_glass.py\
 	'../data'\
 	'../export/analysis_data'\
-	'crystal_ref_run.in'\
+	'100k_minimize_template.in'\
        	'log.lammps'
