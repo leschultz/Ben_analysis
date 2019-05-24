@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Calculate Diffusion for each run
+# Gather enthalpy for glassy phases for each run
 # Inputs:
 #	<directory containing all jobs>
 #	<export directory for analysis>
 #	<name of the input file>
 #	<LAMMPS log file>
 
-gather_enthalpy.py\
+gather_enthalpy_glass.py\
 	'../data'\
 	'../export/analysis_data'\
 	'crystal_ref_run.in'\

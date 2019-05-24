@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Gather enthalpy for crystalline phases for each run
+# Inputs:
+#	<directory containing all jobs>
+#	<export directory for analysis>
+#	<name of the input file>
+#	<LAMMPS log file>
+
+gather_enthalpy_crystal.py\
+	'../data'\
+	'../export/analysis_data'\
+	'crystal_ref_run.in'\
+       	'log.lammps'
