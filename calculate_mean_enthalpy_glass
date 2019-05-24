@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Calculate mean enthalpy from glassy phases
+# Inputs:
+#       <path to glass enthalpy dataframe>
+#	<export directory>
+
+calculate_mean_enthalpy_glass.py\
+       	'../export/analysis_data/enthalpy_glass_df.txt'\
+	'../export/analysis_data'
