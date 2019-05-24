@@ -13,6 +13,7 @@ import os
 source = sys.argv[1]
 destination = sys.argv[2]
 
+
 def iterator(source, destination):
     '''
     Search for all possible files to copy for Tg analysis.
@@ -49,5 +50,6 @@ def iterator(source, destination):
         [copyfile(i, j) for i, j in zip(sor, des)]
 
         print('Copying from: '+path)
+
 
 iterator(source, destination)

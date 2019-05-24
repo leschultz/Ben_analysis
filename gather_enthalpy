@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Calculate Diffusion for each run
+# Inputs:
+#	<directory containing all jobs>
+#	<export directory for analysis>
+#	<name of the input file>
+#	<LAMMPS log file>
+
+enthalpy_iterator.py\
+	'../data'\
+	'../export'\
+	'crystal_ref_run.in'\
+       	'log.lammps'
