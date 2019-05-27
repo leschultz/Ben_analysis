@@ -17,8 +17,7 @@ datadirname = sys.argv[4]  # Name of data directory
 plotdirname = sys.argv[5]  # Name of plot directory
 
 trajdotlammpstrj = sys.argv[6]  # Trajectories
-testdotout = sys.argv[7]  # LAMMPS print to screen
-depdotin = sys.argv[8]  # Input file
+depdotin = sys.argv[7]  # Input file
 
 # Loop for each path
 for item in os.walk(jobs_dir):
@@ -34,7 +33,6 @@ for item in os.walk(jobs_dir):
     run = job(path, export_dir, datadirname, plotdirname)
 
     run.input_file(depdotin)
-    run.sys(testdotout)
     run.box(trajdotlammpstrj)
 
     run.vp_variance()

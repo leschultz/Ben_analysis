@@ -8,7 +8,6 @@
 #	<name of directory containing analysis data>
 #       <name of directory containing analysis plots>
 #	<name of trajectory file>
-#	<name of LAMMPS print to screen file>
 #	<name of input file>
 
 variance_iterator.py\
@@ -18,5 +17,4 @@ variance_iterator.py\
        	'analysis_data'\
        	'analysis_plots'\
        	'traj.lammpstrj'\
-       	'test.out'\
        	'dep.in'
