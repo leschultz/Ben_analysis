@@ -171,7 +171,7 @@ class job:
 
         all_indexes = []
         frames = 0
-        for frame in df['frame'][:2]:
+        for frame in df['frame']:
             out = node.compute(frame)
             indexes = out.particle_properties['Voronoi Index'].array
             all_indexes.append(indexes)
