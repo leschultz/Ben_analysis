@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Gather maximum VP variance from analysis
+# Inputs:
+#       <analysis data from jobs>
+#	<name of file containing max variance>
+#       <export directory>
+
+gather_variance.py\
+       	'../export'\
+       	'max_variance.txt'\
+       	'../export/analysis_data'
