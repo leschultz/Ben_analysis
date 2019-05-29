@@ -45,6 +45,7 @@ for path, subdirs, files in os.walk(datadir):
 
     print(path)
 
+    parentpot = len(split)*'../'+'potentials'
     minfile = join(path, 'minimization.in')
 
     with open(template, 'rt') as i:
@@ -53,7 +54,7 @@ for path, subdirs, files in os.walk(datadir):
                 if 'TIMESTEP' in line:
                     j.write(line.replace('TIMESTEP', timestep))
                 elif 'POTENTIAL' in line:
-                    j.write(line.replace('POTENTIAL', potfile))
+                    j.write(line.replace('POTENTIAL', join(parentpot, potfile)))
 
                 elif 'STYLE' in line:
                     j.write(line.replace('STYLE', filetype))

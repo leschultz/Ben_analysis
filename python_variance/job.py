@@ -130,7 +130,7 @@ class job:
         if verbose:
             print(
                   'Calculating VP variety and ' +
-                  'variance at highest temperature hold'
+                  'variance at constant temperature hold'
                   )
 
         try:
@@ -148,8 +148,11 @@ class job:
             raise ValueError(message)
 
         # Find the interval for the isothermal hold
-        cutoff = sum(self.runsteps[:5])
-        condition = (self.dftraj['Step'] >= cutoff)
+        cutoff1 = sum(self.runsteps[:3])
+        cutoff2 = sum(self.runsteps[:4])
+
+        condition = (self.dftraj['Step'] >= cutoff1)
+        condition = condition & (self.dftraj['Step'] <= cutoff2)
 
         # Grab trajectory information from interval
         df = self.dftraj[condition]
@@ -254,7 +257,7 @@ class job:
                           str(coordinate)
                           )
             ax.axvline(
-                       max_variance['variance'].values[0],
+                       max_variance['number_of_vp'].values[0],
                        color='k',
                        linestyle=':',
                        label=vlinelabel
