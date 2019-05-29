@@ -39,6 +39,8 @@ for path, subdirs, files in os.walk(datadir):
 
     system = split[-6].replace('-', '')
 
+    elements = [i for i in split[-6].split('-')]
+    elements = ' '.join(elements)
     timestep = split[-1]
     potfile = potentials[system]['file']
     filetype = potentials[system]['filetype']
@@ -54,7 +56,8 @@ for path, subdirs, files in os.walk(datadir):
                 if 'TIMESTEP' in line:
                     j.write(line.replace('TIMESTEP', timestep))
                 elif 'POTENTIAL' in line:
-                    j.write(line.replace('POTENTIAL', join(parentpot, potfile)))
+                    replacement = join(parentpot, potfile)+' '+elements
+                    j.write(line.replace('POTENTIAL', replacement))
 
                 elif 'STYLE' in line:
                     j.write(line.replace('STYLE', filetype))
