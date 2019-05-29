@@ -24,12 +24,6 @@ for path, subdirs, files in os.walk(datadir):
     if stepset != split[-2]:
         continue
 
-    export = join(*[exportdir, path.strip(datadir), '2450k_minimization'])
-    print(export)
-
-    if not os.path.exists(export):
-        os.makedirs(export)
-
     # Paths to files
     inputfile = join(path, inputname)
     trajfile = join(path, trajname)
@@ -64,7 +58,19 @@ for path, subdirs, files in os.walk(datadir):
                 if (step >= hold1) & (step <= hold2):
                     condition = True
 
-                    name = join(export, 'frame_'+str(step)+'.lammpstrj')
+                    export = join(*[
+                                    exportdir,
+                                    path.strip(datadir),
+                                    '2450k_minimization',
+                                    str(step)
+                                    ])
+
+                    print('Creating: '+export)
+
+                    if not os.path.exists(export):
+                        os.makedirs(export)
+
+                    name = join(export, 'traj.lammpstrj')
 
                     # The file to dump data into
                     w = open(name, 'w')
