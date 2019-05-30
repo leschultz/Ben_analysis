@@ -237,42 +237,52 @@ class job:
         if plot:
 
             # Plot variance
-            fig, ax = pl.subplots()
+            for i in [counts.shape[0], first]:
+                fig, ax = pl.subplots()
 
-            ax.plot(
-                    vptypes,
-                    variance,
-                    marker='.',
-                    linestyle='none',
-                    label='Data for '+str(frames)+' frames'
-                    )
+                ax.plot(
+                        vptypes[:i],
+                        variance[:i],
+                        marker='.',
+                        linestyle='none',
+                        label='Data for '+str(frames)+' frames'
+                        )
 
-            coordinate = (
-                          max_variance['number_of_vp'].values[0],
-                          max_variance['variance'].values[0]
-                          )
+                coordinate = (
+                              max_variance['number_of_vp'].values[0],
+                              max_variance['variance'].values[0]
+                              )
 
-            vlinelabel = (
-                          'Max Variance: ' +
-                          str(coordinate)
-                          )
-            ax.axvline(
-                       max_variance['number_of_vp'].values[0],
-                       color='k',
-                       linestyle=':',
-                       label=vlinelabel
-                       )
+                vlinelabel = (
+                              'Max Variance: ' +
+                              str(coordinate)
+                              )
+                ax.axvline(
+                           max_variance['number_of_vp'].values[0],
+                           color='k',
+                           linestyle=':',
+                           label=vlinelabel
+                           )
 
-            ax.set_ylabel('Variance of VP [-]')
-            ax.set_xlabel('Number of VP Types [-]')
+                ax.set_ylabel('Variance of VP [-]')
+                ax.set_xlabel('Number of VP Types [-]')
 
-            ax.grid()
-            ax.legend()
+                ax.grid()
+                ax.legend()
 
-            fig.tight_layout()
-            fig.savefig(os.path.join(self.plotpath, 'variance.png'))
+                fig.tight_layout()
 
-            pl.close('all')
+                plotname = (
+                            'variance_top_' +
+                            str(i) +
+                            '_from_' +
+                            str(counts.shape[0]) +
+                            '.png'
+                            )
+
+                fig.savefig(os.path.join(self.plotpath, plotname))
+
+                pl.close('all')
 
             # Plot distribution of cluster types seen
             fig, ax = pl.subplots()
