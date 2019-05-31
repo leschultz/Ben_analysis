@@ -39,7 +39,7 @@ for path, subdirs, files in os.walk(datadir):
                 holds.append(int(values[1].strip('\n')))
 
     hold1 = sum(holds[:3])  # Preparation holds
-    hold2 = holds[3]  # Hold at 2450 K
+    hold2 = sum(holds[:4])  # Hold at 2450 K
 
     # Parse trajectory file for 2450 K hold
     with open(trajfile) as f:
@@ -60,7 +60,7 @@ for path, subdirs, files in os.walk(datadir):
 
                     export = join(*[
                                     exportdir,
-                                    path.strip(datadir),
+                                    path.replace(datadir, ''),
                                     '2450k_minimization',
                                     str(step)
                                     ])
