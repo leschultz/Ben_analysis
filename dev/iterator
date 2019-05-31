@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Gather the Voronoi Polyhedra (VP) indexes
+
+./iterator.py\
+	/home/nerve/Downloads/dev/2450k_minimization\
+	6\
+	finaltraj.lammpstrj\
+	log.lammps\
+	0.1\
+	10\
+	../export
