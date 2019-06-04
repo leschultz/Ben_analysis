@@ -162,7 +162,6 @@ class job:
         df['time'] = df['time']-df['time'][0]
         df['frame'] = df['frame']-df['frame'][0]
 
-        print(df)
         # Load input data and create an ObjectNode with a data pipeline.
         node = import_file(self.file_trajs, multiple_frames=True)
 
