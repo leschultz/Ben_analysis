@@ -2,7 +2,7 @@
 
 from matplotlib import pyplot as pl
 
-from calculations import *
+from calculations_2450k_minimization import *
 
 from os.path import join
 

@@ -2,7 +2,7 @@
 
 # Gather the Voronoi Polyhedra (VP) indexes
 
-iterator.py\
+iterator_2450k_minimization.py\
 	./\
 	9\
 	minimized_traj.lammpstrj\
