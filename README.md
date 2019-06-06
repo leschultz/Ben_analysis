@@ -1,5 +1,7 @@
 # Bash Executables for Analysing Ben's Data
 
+This documentation may be out of date
+
 Bash scripts that make use of python executables to gather descriptor data.
 
 ## Getting Started
