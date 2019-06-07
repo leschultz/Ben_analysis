@@ -163,30 +163,17 @@ def msdmodify(frame, data):
     data.attributes['msd'] = msd
 
 
-def gather_msd(file_trajs, start, stop):
+def gather_msd(node, start, stop):
     '''
     Calculate MSD for all and each element type.
 
     inputs:
-        file_trajs = name of the trajectory file with the path
+        node = the loaded trajectories from Ovito
         start = the starting frame
         stop = the stopping frame
     outputs:
         dfmsd = dataframe for msd
     '''
-
-    # Load input data and create an ObjectNode with a data pipeline.
-    node = import_file(file_trajs, multiple_frames=True)
-
-    # Calculate per-particle displacements with respect to a start
-    modifier = CalculateDisplacementsModifier()
-    modifier.assume_unwrapped_coordinates = True
-    modifier.reference.load(file_trajs)
-    modifier.reference_frame = start
-    node.modifiers.append(modifier)
-
-    # Insert custom modifier into the data pipeline.
-    node.modifiers.append(PythonScriptModifier(function=msdmodify))
 
     # The variables where data will be held
     msd = []
@@ -434,6 +421,18 @@ class job:
         time_origins = df['time'].values[:cut]
         time_endings = df['time'].values[cut:cut+number]
 
+        # Load input data and create an ObjectNode with a data pipeline.
+        node = import_file(self.file_trajs, multiple_frames=True)
+
+        # Calculate per-particle displacements with respect to a start
+        modifier = CalculateDisplacementsModifier()
+        modifier.assume_unwrapped_coordinates = True
+        modifier.reference.load(self.file_trajs)
+        node.modifiers.append(modifier)
+
+        # Insert custom modifier into the data pipeline.
+        node.modifiers.append(PythonScriptModifier(function=msdmodify))
+
         # Collect diffusion coefficients
         data = []
 
@@ -447,7 +446,9 @@ class job:
                       '/'+str(number)
                       )
 
-            dfmsd = gather_msd(self.file_trajs, start, stop)
+            # Change the reference frame for MSD
+            node.modifiers[0].reference_frame = start
+            dfmsd = gather_msd(node, start, stop)
 
             cols = [list(dfmsd.columns)[0]]+self.elements
             cols = cols[:len(dfmsd.columns)]
