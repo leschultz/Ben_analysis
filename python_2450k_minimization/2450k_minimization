@@ -2,11 +2,13 @@
 
 # Gather the Voronoi Polyhedra (VP) indexes
 
+EXPORT="export"
+
 iterator_2450k_minimization.py\
 	./\
-	9\
+	8\
 	minimized_traj.lammpstrj\
 	log.lammps\
 	0.1\
 	10\
-	../export
+	./"$EXPORT"

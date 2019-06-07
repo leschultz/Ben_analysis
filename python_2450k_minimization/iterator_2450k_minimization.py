@@ -33,6 +33,9 @@ for path, subdir, files in os.walk(datadir):
     if '-' not in run[0]:
         continue
 
+    if export in path:
+        continue
+
     total += 1
 
 # Get current directory
@@ -43,13 +46,22 @@ cols = ['system', 'composition', 'steps', 'job', 'framestep', 'vp']
 df = pd.DataFrame(columns=cols)
 
 # Construct dataframe containing VP indexes
-count = 0
-for path, subdir, files in os.walk(datadir):
+count = 1
+for path, subdirs, files in os.walk(datadir):
 
     split = path.split('/')
     run = split[-treelen:]
 
     if '-' not in run[0]:
+        continue
+
+    if export in path:
+        continue
+
+    if 'plots' in path:
+        continue
+
+    if 'variance' in path:
         continue
 
     system = run[-6]
@@ -58,33 +70,25 @@ for path, subdir, files in os.walk(datadir):
     job = run[-3]
     framestep = run[-1]
 
-    trajfile = join(path, trajname)
-    logfile = join(path, logname)
+    all_indexes = []
+    for sub in subdirs:
 
-    frames = log_frames(logfile)  # Get the numer of minimization frames
-    indexes = vp(trajfile, frames, edge_threshold)  # VP indexes
+        trajfile = join(*[path, sub, trajname])
+        logfile = join(*[path, sub, logname])
 
-    df.loc[count] = [system, composition, steps, job, framestep, indexes]
+        frames = log_frames(logfile)  # Get the numer of minimization frames
+        indexes = vp(trajfile, frames, edge_threshold)  # VP indexes
 
-    count += 1
-
-    # Print status
-    print('VP ('+str(count)+'/'+str(total)+'): '+join(*run))
-
-groups = df.groupby(cols[:4])
-
-ngroups = len(groups)
-iteration = 1
-for group, data in groups:
+        all_indexes.append(indexes)
 
     # Combine all the frames
-    all_indexes = [pd.DataFrame(i) for i in data['vp']]
-    d = pd.concat(all_indexes)
-    d = d.fillna(0)  # Make cure indexes are zero if not included
-    d = d.astype(int)  # Make sure all counts are integers
+    all_indexes = [pd.DataFrame(i) for i in all_indexes]
+    df = pd.concat(all_indexes)
+    df = df.fillna(0)  # Make cure indexes are zero if not included
+    df = df.astype(int)  # Make sure all counts are integers
 
     # Count the number of unique VP
-    coords, counts = np.unique(d.values, axis=0, return_counts=True)
+    coords, counts = np.unique(df.values, axis=0, return_counts=True)
 
     # Standard notation
     coords = coords[:, 2:]
@@ -95,10 +99,10 @@ for group, data in groups:
     coords = coords[indexes]
     counts = counts[indexes]
 
-    total = sum(counts)  # The total number of atoms for all frames
+    total_vp = sum(counts)  # The total number of atoms for all frames
 
     # Gather fraction values
-    fractions = counts/total
+    fractions = counts/total_vp
 
     # Calculate variance from list including ordered fractions of VP
     variance = []
@@ -116,13 +120,8 @@ for group, data in groups:
     max_variance = pd.DataFrame(df_variance.loc[max_index, :]).T
     max_variance['number_of_vp'] = max_variance['number_of_vp'].astype(int)
 
-    run = join(*list(group))
-
-    # Print status
-    print('Variance ('+str(iteration)+'/'+str(ngroups)+'): '+run)
-
     # Export directory for data
-    calcdir = join(*[export, run, 'data', 'variance'])
+    calcdir = join(*[export, path, 'data', 'variance'])
     if not os.path.exists(calcdir):
         os.makedirs(calcdir)
 
@@ -138,13 +137,12 @@ for group, data in groups:
                         )
 
     # Export directory for plots
-    plotdir = join(*[export, run, 'plots', 'variance'])
+    plotdir = join(*[export, path, 'plots', 'variance'])
     if not os.path.exists(plotdir):
         os.makedirs(plotdir)
 
     # Plot variance
     for i in [counts.shape[0], dominantvp]:
-
         fig, ax = pl.subplots()
 
         ax.plot(
@@ -152,7 +150,7 @@ for group, data in groups:
                 variance[:i],
                 marker='.',
                 linestyle='none',
-                label='Data for '+str(data.shape[0])+' frames'
+                label='Data for '+str(frames)+' frames'
                 )
 
         coordinate = (
@@ -177,8 +175,16 @@ for group, data in groups:
         ax.grid()
         ax.legend()
 
-        plotname = 'variance_top_'+str(i)+'_from_'+str(counts.shape[0])+'.png'
         fig.tight_layout()
+
+        plotname = (
+                    'variance_top_' +
+                    str(i) +
+                    '_from_' +
+                    str(counts.shape[0]) +
+                    '.png'
+                    )
+
         fig.savefig(join(plotdir, plotname))
 
         pl.close('all')
@@ -195,8 +201,11 @@ for group, data in groups:
     ax.set_ylabel('The '+str(dominantvp)+' Most Frequent VP [-]')
 
     fig.tight_layout()
-    fig.savefig(join(plotdir, 'vp_top_'+str(dominantvp)+'.png'))
+    fig.savefig(join(plotdir, 'variety.png'))
 
     pl.close('all')
 
-    iteration += 1
+    # Print status
+    print('VP ('+str(count)+'/'+str(total)+'): '+join(*run))
+
+    count += 1
