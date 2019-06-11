@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Calculate mean variance from gathered variance values
+# Inputs:
+#       <path to variance dataframe>
+#	<export directory>
+
+calculate_mean_2450k_minimization_variance.py\
+       	'./export/analysis_data/variance_2450k_minimization_df.txt'\
+	'./export/analysis_data'
