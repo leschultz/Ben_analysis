@@ -1,0 +1,43 @@
+units           metal                 # Angstrom, eV, ps, bar
+boundary        p p p                 # Periodic boundaries in all dimensions.
+atom_style      atomic                # Pair potentials.
+
+#------------------------------------------------------------------
+#  Define simulation box.
+#------------------------------------------------------------------
+ 
+lattice fcc 4.00
+
+region my_box block 0 17 0 17 0 17
+ 
+create_box      2 my_box
+
+read_dump traj.lammpstrj TIMESTEP x y z wrapped no add yes box yes
+
+#------------------------------------------------------------------
+#  Define interatomic potential.
+#------------------------------------------------------------------
+pair_style       STYLE
+pair_coeff       * * POTENTIAL
+
+thermo 1
+thermo_style    custom step temp press etotal pe enthalpy vol
+thermo_modify   flush yes
+
+#-----------------------------------------------------------------
+#  static relaxation
+#-----------------------------------------------------------------
+fix 1 all box/relax iso 0.0 vmax 0.005
+
+min_style cg
+minimize 1.0e-7 1.0e-9 100 1000
+
+
+#------------------------------------------------------------------
+#  How to write the trajectory.
+#------------------------------------------------------------------
+dump            dump_final all custom 1 minimized_traj.lammpstrj id type xu yu zu
+
+dump_modify     dump_final sort id
+dump_modify     dump_final first yes
+run 0
