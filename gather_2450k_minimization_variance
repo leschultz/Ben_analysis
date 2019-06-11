@@ -6,7 +6,7 @@
 #	<name of file containing max variance>
 #       <export directory>
 
-gather_variance.py\
+gather_2450k_minimization_variance.py\
        	'./export'\
        	'max_variance.txt'\
        	'./export/analysis_data'
